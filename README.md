@@ -41,39 +41,30 @@ npx @fluidwalletbase/sdk create my-swap-app
 cd my-swap-app
 ```
 
-### 2. Deploy FluidSOR.sol to Base
+### 2. Configure your environment
 
-```bash
-# From the fluid-sor repo
-forge create contracts/FluidSOR.sol:FluidSOR \
-  --constructor-args <FLUID_POOL_ADDRESS> \
-  --rpc-url base \
-  --broadcast \
-  --verify
-```
-
-Copy the deployed address.
-
-### 3. Configure your environment
+The **FluidSOR contract is already deployed on Base mainnet** by the Fluid Wallet team — no deployment needed.
 
 ```bash
 # .env.local
-VITE_FLUID_SOR_ADDRESS=0xYourDeployedFluidSORAddress
+VITE_FLUID_SOR_ADDRESS=0x000000000000000000000000000000000000dEaD  # replace with live address from fluidnative.com
 
 # Optional — for WalletConnect support
 VITE_WALLETCONNECT_PROJECT_ID=your_project_id
 ```
 
+Get the latest deployed contract address at [fluidnative.com](https://fluidnative.com).
+
 Get a free WalletConnect project ID at [cloud.walletconnect.com](https://cloud.walletconnect.com).
 
-### 4. Start the dev server
+### 3. Start the dev server
 
 ```bash
 npm run dev
 # → http://localhost:5173
 ```
 
-### 5. Build for production
+### 4. Build for production
 
 ```bash
 npm run build
