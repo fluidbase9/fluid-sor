@@ -1,0 +1,39 @@
+{
+  "name": "@fluidwalletbase/sdk",
+  "version": "1.0.0",
+  "description": "Fluid Smart Order Router SDK — scaffold a swap interface powered by FluidSOR on Base in one command",
+  "keywords": [
+    "fluid",
+    "defi",
+    "swap",
+    "base",
+    "smart-order-routing",
+    "blockchain",
+    "web3",
+    "wagmi",
+    "viem"
+  ],
+  "homepage": "https://fluidnative.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fluidbase9/fluid-sor"
+  },
+  "bugs": {
+    "url": "https://github.com/fluidbase9/fluid-sor/issues"
+  },
+  "license": "MIT",
+  "author": "Fluid Wallet <dev@fluidnative.com> (https://fluidnative.com)",
+  "bin": {
+    "create-fluid-app": "./bin/create-fluid-app.js"
+  },
+  "files": [
+    "bin",
+    "templates",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
