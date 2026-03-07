@@ -145,7 +145,7 @@ export const wagmiConfig = createConfig({
 ## FluidSOR contract
 
 The swap widget calls the **FluidSOR** smart contract deployed on Base mainnet.
-Source: [`contracts/FluidSOR.sol`](https://github.com/fluidwallet/fluid-sor/blob/main/contracts/FluidSOR.sol)
+Source: [`contracts/FluidSOR.sol`](https://github.com/fluidbase9/fluid-sor/blob/main/contracts/FluidSOR.sol)
 
 ### Key functions
 
@@ -178,9 +178,9 @@ npm publish --access public
 | | |
 |---|---|
 | Website | [fluidnative.com](https://fluidnative.com) |
-| GitHub | [github.com/fluidwallet/fluid-sor](https://github.com/fluidwallet/fluid-sor) |
+| GitHub | [github.com/fluidbase9/fluid-sor](https://github.com/fluidbase9/fluid-sor) |
 | npm | [npmjs.com/package/@fluidwalletbase/sdk](https://www.npmjs.com/package/@fluidwalletbase/sdk) |
-| Issues | [github.com/fluidwallet/fluid-sor/issues](https://github.com/fluidwallet/fluid-sor/issues) |
+| Issues | [github.com/fluidbase9/fluid-sor/issues](https://github.com/fluidbase9/fluid-sor/issues) |
 
 ---
 
