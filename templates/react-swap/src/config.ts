@@ -24,7 +24,7 @@ export const wagmiConfig = createConfig({
 /** FluidSOR contract address on Base mainnet. Set via VITE_FLUID_SOR_ADDRESS. */
 export const FLUID_SOR_ADDRESS =
   (import.meta.env.VITE_FLUID_SOR_ADDRESS as string) ||
-  "0x0000000000000000000000000000000000000000";
+  "0xF24daF8Fe15383fb438d48811E8c4b43749DafAE";
 
 export const IS_DEPLOYED =
   FLUID_SOR_ADDRESS !== "0x0000000000000000000000000000000000000000";

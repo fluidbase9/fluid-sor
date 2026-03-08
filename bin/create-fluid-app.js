@@ -122,9 +122,8 @@ async function main() {
 
   step(3, TOTAL_STEPS, "Writing .env.local…");
   const envContent = [
-    "# FluidSOR contract address on Base mainnet",
-    "# Deploy contracts/FluidSOR.sol then paste the address here",
-    "VITE_FLUID_SOR_ADDRESS=",
+    "# FluidSOR contract address on Base mainnet (pre-filled with the live deployment)",
+    "VITE_FLUID_SOR_ADDRESS=0xF24daF8Fe15383fb438d48811E8c4b43749DafAE",
     "",
     "# WalletConnect project ID — get one free at https://cloud.walletconnect.com",
     "VITE_WALLETCONNECT_PROJECT_ID=",
@@ -138,7 +137,7 @@ async function main() {
   log("");
   log(`  ${C.bold}Next steps:${C.reset}`);
   info("1.", `cd ${C.cyan}${projectName}${C.reset}`);
-  info("2.", `Fill in ${C.gray}.env.local${C.reset} with your ${C.cyan}VITE_FLUID_SOR_ADDRESS${C.reset}`);
+  info("2.", `(Optional) Add your ${C.cyan}VITE_WALLETCONNECT_PROJECT_ID${C.reset} in ${C.gray}.env.local${C.reset}`);
   info("3.", `${C.cyan}npm run dev${C.reset}  — opens at http://localhost:5173`);
   log("");
   log(`  ${C.bold}What's inside:${C.reset}`);
