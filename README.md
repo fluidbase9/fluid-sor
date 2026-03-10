@@ -7,6 +7,15 @@
 
 ---
 
+## Packages
+
+| Package | Description |
+|---|---|
+| [`@fluidwalletbase/sdk`](.) | CLI scaffold tool — creates a swap app in one command |
+| [`@fluidwalletbase/wallet-endpoints`](./packages/wallet-endpoints) | Developer SDK — authentication, wallet generation (ETH/Base/SOL), SOR quote API |
+
+---
+
 ## Quick start
 
 ```bash
