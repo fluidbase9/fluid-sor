@@ -25,8 +25,10 @@ import {
 } from "./config";
 
 // ─── Fluid SDK client ─────────────────────────────────────────────────────────
-
-const client = new FluidWalletClient("https://fluidnative.com", FLUID_API_KEY ?? null);
+// In dev, Vite proxies /api/* to fluidnative.com — use relative URL to avoid CORS.
+// In prod, point directly at the server.
+const BASE_URL = import.meta.env.DEV ? "" : "https://fluidnative.com";
+const client = new FluidWalletClient(BASE_URL, FLUID_API_KEY ?? null);
 
 // ─── Viem clients ─────────────────────────────────────────────────────────────
 
@@ -431,6 +433,7 @@ export default function FluidSwap() {
   const [slippage,  setSlippage]  = useState(0.5);
   const [routes,    setRoutes]    = useState<SorRoute[]>([]);
   const [selRoute,  setSelRoute]  = useState(0);
+  const [scanning,  setScanning]  = useState(false); // shows animation immediately on amount change
   const [quoting,   setQuoting]   = useState(false);
   const [quoteErr,  setQuoteErr]  = useState<string | null>(null);
   const [step,      setStep]      = useState<"idle" | "routed" | "approving" | "swapping">("idle");
@@ -458,8 +461,9 @@ export default function FluidSwap() {
 
   const fetchQuote = useCallback(async () => {
     const n = parseFloat(amount);
-    if (!n || n <= 0) { setRoutes([]); setQuoteErr(null); return; }
+    if (!n || n <= 0) { setRoutes([]); setQuoteErr(null); setScanning(false); return; }
     setQuoting(true);
+    setScanning(true);
     setQuoteErr(null);
     try {
       const data = await client.getQuote(fromSym, toSym, amount);
@@ -472,10 +476,19 @@ export default function FluidSwap() {
       setRoutes([]);
     } finally {
       setQuoting(false);
+      setScanning(false);
     }
   }, [amount, fromSym, toSym]);
 
-  // Auto-preview quote (lightweight, no route lock)
+  // Trigger scanning animation immediately when amount changes
+  useEffect(() => {
+    if (step === "routed") return;
+    const n = parseFloat(amount);
+    if (n && n > 0 && FLUID_API_KEY) setScanning(true);
+    else setScanning(false);
+  }, [amount, fromSym, toSym, step]);
+
+  // Auto-preview quote (debounced, no route lock)
   useEffect(() => {
     if (step === "routed") return; // don't overwrite locked route
     const t = setTimeout(fetchQuote, 600);
@@ -560,6 +573,7 @@ export default function FluidSwap() {
     const n = parseFloat(amount);
     if (!n || n <= 0 || !FLUID_API_KEY) return;
     setQuoting(true);
+    setScanning(true);
     setQuoteErr(null);
     setSwapError(null);
     try {
@@ -573,6 +587,7 @@ export default function FluidSwap() {
       setQuoteErr(e?.message ?? "Network error");
     } finally {
       setQuoting(false);
+      setScanning(false);
     }
   };
 
@@ -639,7 +654,7 @@ export default function FluidSwap() {
             min="0"
             placeholder="0.0"
             value={amount}
-            onChange={(e) => { setAmount(e.target.value); setRoutes([]); setTxHash(null); setStep("idle"); }}
+            onChange={(e) => { setAmount(e.target.value); setRoutes([]); setTxHash(null); setStep("idle"); setQuoteErr(null); }}
           />
           <button style={S.tokenBtn(tokenIn.color)} onClick={() => setShowFrom(true)}>
             <span style={{ width: 18, height: 18, borderRadius: "50%", background: tokenIn.color + "30", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 800 }}>
@@ -696,12 +711,12 @@ export default function FluidSwap() {
       </div>
 
       {/* ── Routing animation + live routes ── */}
-      {(quoting || routes.length > 0) && amount && (
+      {(scanning || quoting || routes.length > 0) && amount && (
         <div style={{ border: "1px solid #1a1a1a", borderRadius: 14, padding: "0.75rem 1rem", background: "#080808" }}>
           <RoutingAnimation
             fromSym={fromSym}
             toSym={toSym}
-            scanning={quoting}
+            scanning={scanning || quoting}
             routes={routes}
           />
 
