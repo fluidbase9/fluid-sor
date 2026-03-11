@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fluidwalletbase/wallet-endpoints": "^1.0.1",
     "react":     "^18.3.0",
     "react-dom": "^18.3.0",
     "viem":      "^2.17.0"
