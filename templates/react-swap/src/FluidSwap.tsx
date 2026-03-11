@@ -8,7 +8,6 @@ import {
   parseUnits,
   type Hash,
 } from "viem";
-import { base } from "viem/chains";
 import {
   FluidWalletClient,
   type SorRoute,
@@ -21,6 +20,8 @@ import {
   BASESCAN,
   FLUID_API_KEY,
   FLUID_PRIVATE_KEY,
+  CHAIN,
+  BASE_RPC_URL,
   type Token,
 } from "./config";
 
@@ -32,7 +33,8 @@ const client = new FluidWalletClient(BASE_URL, FLUID_API_KEY ?? null);
 
 // ─── Viem clients ─────────────────────────────────────────────────────────────
 
-const publicClient = createPublicClient({ chain: base, transport: http() });
+// Use explicit Base mainnet RPC — never testnet
+const publicClient = createPublicClient({ chain: CHAIN, transport: http(BASE_RPC_URL) });
 
 const account =
   FLUID_PRIVATE_KEY &&
@@ -45,7 +47,7 @@ const account =
     : null;
 
 const walletClient = account
-  ? createWalletClient({ account, chain: base, transport: http() })
+  ? createWalletClient({ account, chain: CHAIN, transport: http(BASE_RPC_URL) })
   : null;
 
 // ─── ABIs ────────────────────────────────────────────────────────────────────

@@ -1,8 +1,13 @@
-import { base } from "viem/chains";
+import { base, mainnet } from "viem/chains";
 
-// ─── Chain ────────────────────────────────────────────────────────────────────
+// ─── Chains (all mainnet) ─────────────────────────────────────────────────────
 
-export const CHAIN = base;
+export const CHAIN        = base;     // Base mainnet  (chain ID 8453)
+export const ETH_CHAIN    = mainnet;  // Ethereum mainnet (chain ID 1)
+
+// Public mainnet RPC endpoints — override via VITE_BASE_RPC_URL / VITE_ETH_RPC_URL
+export const BASE_RPC_URL = (import.meta.env.VITE_BASE_RPC_URL as string) || "https://mainnet.base.org";
+export const ETH_RPC_URL  = (import.meta.env.VITE_ETH_RPC_URL  as string) || "https://ethereum.publicnode.com";
 
 // ─── FluidSOR contract ────────────────────────────────────────────────────────
 
