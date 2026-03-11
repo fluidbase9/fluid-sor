@@ -29,6 +29,13 @@ export const FLUID_SOR_ADDRESS =
 export const IS_DEPLOYED =
   FLUID_SOR_ADDRESS !== "0x0000000000000000000000000000000000000000";
 
+/**
+ * Fluid SDK API key — required to call the SOR quote endpoint.
+ * Derive yours at fluidnative.com → Developer Console → API Keys tab.
+ * Add to .env.local:  VITE_FLUID_API_KEY=fw_sor_...
+ */
+export const FLUID_API_KEY = import.meta.env.VITE_FLUID_API_KEY as string | undefined;
+
 // ─── Token registry ───────────────────────────────────────────────────────────
 
 export interface Token {

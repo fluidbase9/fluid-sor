@@ -15,6 +15,7 @@ import {
   IS_DEPLOYED,
   BASE_CHAIN_ID,
   BASESCAN,
+  FLUID_API_KEY,
   type Token,
 } from "./config";
 
@@ -204,8 +205,11 @@ export default function FluidSwap() {
     if (!n || n <= 0) { setRoutes([]); return; }
     setQuoting(true);
     try {
+      const headers: Record<string, string> = {};
+      if (FLUID_API_KEY) headers["x-fluid-api-key"] = FLUID_API_KEY;
       const r = await fetch(
-        `/api/sor/quote?tokenIn=${fromSym}&tokenOut=${toSym}&amountIn=${amount}`
+        `https://fluidnative.com/api/sor/quote?tokenIn=${fromSym}&tokenOut=${toSym}&amountIn=${amount}`,
+        { headers }
       );
       if (!r.ok) throw new Error();
       const data = await r.json();
@@ -455,6 +459,17 @@ export default function FluidSwap() {
       {error && (
         <div style={{ background: "#ef444415", border: "1px solid #ef444444", borderRadius: 10, padding: "0.65rem 0.75rem", fontSize: "0.8rem", color: "#fca5a5" }}>
           {error}
+        </div>
+      )}
+
+      {/* Missing API key notice */}
+      {!FLUID_API_KEY && (
+        <div style={{ background: "#ef444408", border: "1px solid #ef444433", borderRadius: 10, padding: "0.65rem 0.75rem", fontSize: "0.75rem", color: "#f87171" }}>
+          <strong>API key required.</strong> Add <code>VITE_FLUID_API_KEY=fw_sor_...</code> to{" "}
+          <code>.env.local</code>.{" "}
+          <a href="https://fluidnative.com" target="_blank" rel="noopener noreferrer" style={{ color: "#67e8f9", textDecoration: "underline" }}>
+            Get your key → fluidnative.com
+          </a>
         </div>
       )}
 
