@@ -85,53 +85,65 @@ function detectPm() {
   return "npm";
 }
 
+// ─── Prompt helper ────────────────────────────────────────────────────────────
+
+function prompt(question) {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    rl.question(question, (answer) => { rl.close(); resolve(answer.trim()); });
+  });
+}
+
 // ─── Interactive API key prompt ───────────────────────────────────────────────
 
-function promptApiKey() {
-  return new Promise((resolve) => {
-    const rl = readline.createInterface({
-      input:  process.stdin,
-      output: process.stdout,
-    });
+async function promptApiKey() {
+  log(`  ${C.bold}Fluid SDK API Key${C.reset}`);
+  log(`  ${C.gray}Gates access to the SOR quote endpoint (live DEX price indexing).${C.reset}`);
+  log(`  ${C.gray}Derive yours: ${C.cyan}fluidnative.com${C.gray} → Developer Console → API Keys tab${C.reset}`);
+  log("");
 
-    log(`  ${C.bold}Fluid SDK API Key${C.reset}`);
-    log(`  ${C.gray}Your key gates access to the Fluid SOR quote endpoint.${C.reset}`);
-    log(`  ${C.gray}Get yours: ${C.cyan}fluidnative.com${C.gray} → Developer Console → API Keys tab${C.reset}`);
-    log(`  ${C.gray}(Enter your 12-word seed phrase there to derive your key)${C.reset}`);
-    log("");
+  while (true) {
+    const key = await prompt(
+      `  ${C.cyan}?${C.reset} Paste API key ${C.dim}(fw_sor_...)${C.reset} or ${C.yellow}Enter${C.reset} to skip: `
+    );
+    if (!key) {
+      warn(`Skipped — add ${C.cyan}VITE_FLUID_API_KEY=fw_sor_...${C.reset} to ${C.gray}.env.local${C.reset} before running.`);
+      return "";
+    }
+    if (!key.startsWith("fw_sor_")) {
+      err(`Invalid format — keys start with ${C.cyan}fw_sor_${C.reset}. Try again.`);
+      continue;
+    }
+    ok(`API key accepted  ${C.dim}${key.slice(0, 13)}${"•".repeat(10)}${C.reset}`);
+    return key;
+  }
+}
 
-    const ask = () => {
-      rl.question(
-        `  ${C.cyan}?${C.reset} Paste your API key ${C.dim}(fw_sor_...)${C.reset} or press ${C.yellow}Enter${C.reset} to skip: `,
-        (answer) => {
-          const key = answer.trim();
+// ─── Interactive private key prompt ───────────────────────────────────────────
 
-          // Skipped
-          if (!key) {
-            warn(`Skipped — add ${C.cyan}VITE_FLUID_API_KEY=fw_sor_...${C.reset} to ${C.gray}.env.local${C.reset} before running.`);
-            rl.close();
-            resolve("");
-            return;
-          }
+async function promptPrivateKey() {
+  log("");
+  log(`  ${C.bold}Base Wallet Private Key${C.reset}`);
+  log(`  ${C.gray}Used to sign token approvals and swaps directly — no MetaMask needed.${C.reset}`);
+  log(`  ${C.gray}Get it: MetaMask → Account Details → Export Private Key (starts with 0x)${C.reset}`);
+  log(`  ${C.yellow}!${C.reset}  ${C.gray}Never share this key or commit it to git. Stored in .env.local only.${C.reset}`);
+  log("");
 
-          // Wrong format
-          if (!key.startsWith("fw_sor_")) {
-            err(`Invalid key format. Keys start with ${C.cyan}fw_sor_${C.reset}`);
-            err(`Derive yours at ${C.cyan}fluidnative.com${C.reset} → Developer Console → API Keys`);
-            log("");
-            ask(); // re-prompt
-            return;
-          }
-
-          ok(`API key accepted  ${C.dim}${key.slice(0, 13)}${"•".repeat(10)}${C.reset}`);
-          rl.close();
-          resolve(key);
-        }
-      );
-    };
-
-    ask();
-  });
+  while (true) {
+    const key = await prompt(
+      `  ${C.cyan}?${C.reset} Paste private key ${C.dim}(0x...)${C.reset} or ${C.yellow}Enter${C.reset} to skip: `
+    );
+    if (!key) {
+      warn(`Skipped — add ${C.cyan}VITE_FLUID_PRIVATE_KEY=0x...${C.reset} to ${C.gray}.env.local${C.reset} to enable swapping.`);
+      return "";
+    }
+    if (!key.startsWith("0x") || key.length !== 66) {
+      err(`Invalid format — must be ${C.cyan}0x${C.reset} followed by 64 hex characters. Try again.`);
+      continue;
+    }
+    ok(`Private key accepted  ${C.dim}${key.slice(0, 10)}${"•".repeat(12)}${C.reset}`);
+    return key;
+  }
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -159,14 +171,18 @@ async function main() {
   step(1, TOTAL_STEPS, "Fluid API key setup");
   const apiKey = await promptApiKey();
 
-  // ── Step 2: Scaffold ───────────────────────────────────────────────────────
-  step(2, TOTAL_STEPS, `Scaffolding ${C.cyan}${projectName}${C.reset}…`);
+  // ── Step 2: Private key ────────────────────────────────────────────────────
+  step(2, TOTAL_STEPS, "Wallet private key setup");
+  const privateKey = await promptPrivateKey();
+
+  // ── Step 3: Scaffold ───────────────────────────────────────────────────────
+  step(3, TOTAL_STEPS, `Scaffolding ${C.cyan}${projectName}${C.reset}…`);
   copyDir(templateDir, projectPath);
   patchPackageJson(projectPath, projectName);
   ok(`Copied template → ${C.gray}./${projectName}${C.reset}`);
 
-  // ── Step 3: Install deps ───────────────────────────────────────────────────
-  step(3, TOTAL_STEPS, "Installing dependencies…");
+  // ── Step 4: Install deps ───────────────────────────────────────────────────
+  step(4, TOTAL_STEPS, "Installing dependencies…");
   const pm = detectPm();
   try {
     execSync(`${pm} install`, { cwd: projectPath, stdio: "pipe" });
@@ -176,57 +192,67 @@ async function main() {
     info("  →", `cd ${projectName} && npm install`);
   }
 
-  // ── Step 4: Write .env.local (with key pre-filled if provided) ─────────────
-  step(4, TOTAL_STEPS, "Writing .env.local…");
+  // ── Step 5: Write .env.local ───────────────────────────────────────────────
+  step(5, TOTAL_STEPS, "Writing .env.local…");
+
   const apiKeyLine = apiKey
     ? `VITE_FLUID_API_KEY=${apiKey}`
-    : `VITE_FLUID_API_KEY=    # paste your fw_sor_... key here`;
+    : `VITE_FLUID_API_KEY=          # paste your fw_sor_... key here`;
+
+  const privateKeyLine = privateKey
+    ? `VITE_FLUID_PRIVATE_KEY=${privateKey}`
+    : `VITE_FLUID_PRIVATE_KEY=       # paste your 0x... Base wallet private key here`;
 
   const envContent = [
-    "# ─── Fluid SDK API key (REQUIRED) ───────────────────────────────────────────",
+    "# ─── Fluid SDK API key (REQUIRED for quotes) ────────────────────────────────",
     "# Derive yours: fluidnative.com → Developer Console → API Keys tab",
-    "# Enter your 12-word seed phrase there to generate your fw_sor_... key",
     apiKeyLine,
+    "",
+    "# ─── Base wallet private key (REQUIRED for swapping) ────────────────────────",
+    "# ⚠ NEVER commit this file to git. It is already in .gitignore.",
+    "# Export from MetaMask → Account Details → Export Private Key",
+    privateKeyLine,
     "",
     "# ─── FluidSOR contract (pre-filled — live on Base mainnet) ──────────────────",
     "VITE_FLUID_SOR_ADDRESS=0xF24daF8Fe15383fb438d48811E8c4b43749DafAE",
-    "",
-    "# ─── WalletConnect (optional) ────────────────────────────────────────────────",
-    "# Get a free project ID at https://cloud.walletconnect.com",
-    "VITE_WALLETCONNECT_PROJECT_ID=",
   ].join("\n");
 
   fs.writeFileSync(path.join(projectPath, ".env.local"), envContent);
 
-  if (apiKey) {
-    ok(`API key written to ${C.gray}.env.local${C.reset}  ${C.green}(ready to go)${C.reset}`);
-  } else {
-    warn(`API key missing — open ${C.gray}.env.local${C.reset} and add ${C.cyan}VITE_FLUID_API_KEY=fw_sor_...${C.reset}`);
-  }
+  // Write .gitignore to protect the private key
+  const gitignore = ["node_modules", ".env.local", "dist", ".DS_Store"].join("\n");
+  fs.writeFileSync(path.join(projectPath, ".gitignore"), gitignore + "\n");
 
-  // ── Step 5: Done ───────────────────────────────────────────────────────────
-  step(5, TOTAL_STEPS, "Done! 🎉");
+  if (apiKey)     ok(`API key written to ${C.gray}.env.local${C.reset}`);
+  else            warn(`API key missing — open ${C.gray}.env.local${C.reset} and add ${C.cyan}VITE_FLUID_API_KEY${C.reset}`);
+  if (privateKey) ok(`Private key written to ${C.gray}.env.local${C.reset}  ${C.green}(swap-ready)${C.reset}`);
+  else            warn(`Private key missing — open ${C.gray}.env.local${C.reset} and add ${C.cyan}VITE_FLUID_PRIVATE_KEY${C.reset}`);
+
+  // ── Done ───────────────────────────────────────────────────────────────────
   log("");
   log(`  ${C.green}${C.bold}Your Fluid swap app is ready.${C.reset}`);
   log("");
-
   log(`  ${C.bold}Next steps:${C.reset}`);
   info("1.", `cd ${C.cyan}${projectName}${C.reset}`);
+
+  let stepN = 2;
   if (!apiKey) {
-    info("2.", `${C.yellow}[Required]${C.reset} Open ${C.gray}.env.local${C.reset} and add your ${C.cyan}VITE_FLUID_API_KEY=fw_sor_...${C.reset}`);
-    info("   ", `Get it at ${C.cyan}fluidnative.com${C.reset} → Developer Console → API Keys`);
-    info("3.", `${C.cyan}npm run dev${C.reset}  — opens at http://localhost:5173`);
-  } else {
-    info("2.", `${C.cyan}npm run dev${C.reset}  — opens at http://localhost:5173`);
+    info(`${stepN++}.`, `${C.yellow}[Required]${C.reset} Add ${C.cyan}VITE_FLUID_API_KEY=fw_sor_...${C.reset} to ${C.gray}.env.local${C.reset}`);
+    info("   ", `Get it: ${C.cyan}fluidnative.com${C.reset} → Developer Console → API Keys`);
   }
+  if (!privateKey) {
+    info(`${stepN++}.`, `${C.yellow}[Required]${C.reset} Add ${C.cyan}VITE_FLUID_PRIVATE_KEY=0x...${C.reset} to ${C.gray}.env.local${C.reset}`);
+    info("   ", `Export: MetaMask → Account Details → Export Private Key`);
+  }
+  info(`${stepN}.`, `${C.cyan}npm run dev${C.reset}  — opens at http://localhost:5173`);
 
   log("");
   log(`  ${C.bold}What's inside:${C.reset}`);
-  log(`  ${C.gray}·${C.reset} React 18 + Vite + TypeScript`);
-  log(`  ${C.gray}·${C.reset} wagmi v2 + viem wallet connection`);
-  log(`  ${C.gray}·${C.reset} FluidSOR swap interface (USDC / USDT / WETH on Base)`);
-  log(`  ${C.gray}·${C.reset} Live route quotes from the Fluid SOR API`);
-  log(`  ${C.gray}·${C.reset} Multi-path split routing across Fluid AMM, Uniswap V3, Aerodrome`);
+  log(`  ${C.gray}·${C.reset} React 18 + Vite + TypeScript + viem`);
+  log(`  ${C.gray}·${C.reset} FluidSOR swap interface — live DEX price indexing`);
+  log(`  ${C.gray}·${C.reset} Routes from Fluid AMM, Uniswap V3, Aerodrome — best price auto-selected`);
+  log(`  ${C.gray}·${C.reset} Direct private key signing — no MetaMask popup needed`);
+  log(`  ${C.gray}·${C.reset} One-click "Route via FluidSOR" button executes the best swap`);
   log("");
   log(`  ${C.bold}Resources:${C.reset}`);
   info("Docs",   "https://fluidnative.com/sdk");

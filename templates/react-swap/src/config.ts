@@ -1,23 +1,8 @@
-import { http, createConfig } from "wagmi";
-import { base } from "wagmi/chains";
-import { injected, walletConnect } from "wagmi/connectors";
+import { base } from "viem/chains";
 
 // ─── Chain ────────────────────────────────────────────────────────────────────
 
 export const CHAIN = base;
-
-// ─── Wagmi config ─────────────────────────────────────────────────────────────
-
-const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID as string;
-
-export const wagmiConfig = createConfig({
-  chains: [base],
-  transports: { [base.id]: http() },
-  connectors: [
-    injected(),
-    ...(projectId ? [walletConnect({ projectId })] : []),
-  ],
-});
 
 // ─── FluidSOR contract ────────────────────────────────────────────────────────
 
@@ -35,6 +20,14 @@ export const IS_DEPLOYED =
  * Add to .env.local:  VITE_FLUID_API_KEY=fw_sor_...
  */
 export const FLUID_API_KEY = import.meta.env.VITE_FLUID_API_KEY as string | undefined;
+
+/**
+ * Your Base wallet private key — used to sign token approvals and swaps locally.
+ * ⚠ NEVER commit this to git. Keep it in .env.local only.
+ * Get it: MetaMask → Account Details → Export Private Key (0x...)
+ * Add to .env.local:  VITE_FLUID_PRIVATE_KEY=0x...
+ */
+export const FLUID_PRIVATE_KEY = import.meta.env.VITE_FLUID_PRIVATE_KEY as string | undefined;
 
 // ─── Token registry ───────────────────────────────────────────────────────────
 
