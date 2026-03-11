@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   createPublicClient,
   createWalletClient,
@@ -301,6 +301,127 @@ function RouteCard({
   );
 }
 
+// ─── Routing animation ────────────────────────────────────────────────────────
+
+const VENUES_SCAN = [
+  { key: "fluid",   label: "Fluid AMM",    color: "#22d3ee", icon: "◈", lineClass: "cyan"   },
+  { key: "uni",     label: "Uniswap V3",   color: "#ff007a", icon: "🦄", lineClass: "pink"   },
+  { key: "aero",    label: "Aerodrome",    color: "#3b82f6", icon: "✈",  lineClass: "blue"   },
+  { key: "split",   label: "Split Route",  color: "#a78bfa", icon: "⑂",  lineClass: "purple" },
+];
+
+function RoutingAnimation({
+  fromSym, toSym, scanning, routes,
+}: { fromSym: string; toSym: string; scanning: boolean; routes: SorRoute[] }) {
+  const [visibleVenues, setVisibleVenues] = useState<number>(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (scanning) {
+      setVisibleVenues(0);
+      let i = 0;
+      timerRef.current = setInterval(() => {
+        i++;
+        setVisibleVenues(i);
+        if (i >= VENUES_SCAN.length) clearInterval(timerRef.current!);
+      }, 260);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+      setVisibleVenues(VENUES_SCAN.length);
+    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [scanning]);
+
+  const tokenIn  = TOKENS[fromSym];
+  const tokenOut = TOKENS[toSym];
+
+  return (
+    <div style={{ padding: "0.75rem 0", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
+        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22d3ee", display: "inline-block",
+          animation: scanning ? "pulse-dot 0.9s ease-in-out infinite" : "none" }} />
+        {scanning
+          ? <span className="shimmer-text" style={{ fontSize: "0.72rem", fontWeight: 600 }}>
+              Indexing all venues on Base…
+            </span>
+          : <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "#22d3ee" }}>
+              {routes.length} route{routes.length !== 1 ? "s" : ""} found · best price auto-selected
+            </span>
+        }
+      </div>
+
+      {/* Token pair row */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        {/* From token */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.35rem",
+          background: tokenIn.color + "18", border: `1px solid ${tokenIn.color}44`,
+          borderRadius: 8, padding: "0.3rem 0.6rem", fontSize: "0.75rem", fontWeight: 700, color: tokenIn.color }}>
+          <span style={{ width: 16, height: 16, borderRadius: "50%", background: tokenIn.color + "30",
+            display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.55rem", fontWeight: 800 }}>
+            {fromSym[0]}
+          </span>
+          {fromSym}
+        </div>
+
+        {/* Center — venue lanes */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+          {VENUES_SCAN.slice(0, visibleVenues).map((v, i) => {
+            const matchedRoute = routes.find(r => r.venue.includes(v.key === "fluid" ? "Fluid" : v.key === "uni" ? "Uniswap" : v.key === "aero" ? "Aerodrome" : "Split"));
+            const isBest = !scanning && matchedRoute && routes[0]?.venue === matchedRoute.venue;
+            return (
+              <div key={v.key} className="scanning-venue" style={{ animationDelay: `${i * 0.05}s` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                  <span style={{ fontSize: "0.65rem", color: v.color, width: 12, textAlign: "center" }}>{v.icon}</span>
+                  <div className={`flow-line ${v.lineClass}`} style={{ flex: 1 }} />
+                  {!scanning && matchedRoute && (
+                    <span style={{ fontSize: "0.6rem", color: isBest ? "#4ade80" : "#6b7280",
+                      fontWeight: isBest ? 700 : 400, minWidth: 60, textAlign: "right" }}>
+                      {matchedRoute.amountOut} {toSym}
+                    </span>
+                  )}
+                  {scanning && (
+                    <span style={{ fontSize: "0.6rem", color: "#374151", minWidth: 60, textAlign: "right" }}>…</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* To token */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.35rem",
+          background: tokenOut.color + "18", border: `1px solid ${tokenOut.color}44`,
+          borderRadius: 8, padding: "0.3rem 0.6rem", fontSize: "0.75rem", fontWeight: 700, color: tokenOut.color }}>
+          <span style={{ width: 16, height: 16, borderRadius: "50%", background: tokenOut.color + "30",
+            display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.55rem", fontWeight: 800 }}>
+            {toSym[0]}
+          </span>
+          {toSym}
+        </div>
+      </div>
+
+      {/* Best route highlight after scan */}
+      {!scanning && routes.length > 0 && (
+        <div className="route-bar-enter" style={{
+          background: "#22d3ee0a", border: "1px solid #22d3ee33",
+          borderRadius: 8, padding: "0.45rem 0.65rem",
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          fontSize: "0.7rem",
+        }}>
+          <span style={{ color: "#22d3ee", fontWeight: 600 }}>
+            Best: {routes[0].venue}
+          </span>
+          <span style={{ color: "#4ade80", fontWeight: 700 }}>
+            {routes[0].amountOut} {toSym}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function FluidSwap() {
@@ -542,7 +663,7 @@ export default function FluidSwap() {
         <div style={S.inputBox}>
           <div style={{ ...S.inputNum, color: bestRoute ? "#4ade80" : "#374151" }}>
             {quoting
-              ? <span style={{ color: "#22d3ee", fontSize: "0.9rem" }}>Fetching routes…</span>
+              ? <span className="shimmer-text" style={{ fontSize: "0.85rem" }}>Routing…</span>
               : bestRoute
                 ? bestRoute.amountOut
                 : <span style={{ color: "#1f2937" }}>—</span>}
@@ -574,25 +695,31 @@ export default function FluidSwap() {
         <span style={{ marginLeft: "auto", color: "#374151", fontSize: "0.68rem" }}>FluidSOR · Base</span>
       </div>
 
-      {/* ── Live routes (via FluidWalletClient.getQuote) ── */}
-      {routes.length > 0 && (
-        <div>
-          <div style={{ fontSize: "0.65rem", color: "#374151", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22d3ee", display: "inline-block" }} />
-            {routes.length} route{routes.length > 1 ? "s" : ""} indexed · best price auto-selected
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-            {routes.map((r, i) => (
-              <RouteCard
-                key={i}
-                route={r}
-                toSym={toSym}
-                selected={selRoute === i}
-                onClick={() => setSelRoute(i)}
-                rank={i}
-              />
-            ))}
-          </div>
+      {/* ── Routing animation + live routes ── */}
+      {(quoting || routes.length > 0) && amount && (
+        <div style={{ border: "1px solid #1a1a1a", borderRadius: 14, padding: "0.75rem 1rem", background: "#080808" }}>
+          <RoutingAnimation
+            fromSym={fromSym}
+            toSym={toSym}
+            scanning={quoting}
+            routes={routes}
+          />
+
+          {/* Detailed route cards (after scan completes) */}
+          {!quoting && routes.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginTop: "0.5rem" }}>
+              {routes.map((r, i) => (
+                <RouteCard
+                  key={i}
+                  route={r}
+                  toSym={toSym}
+                  selected={selRoute === i}
+                  onClick={() => setSelRoute(i)}
+                  rank={i}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 

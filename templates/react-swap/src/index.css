@@ -24,3 +24,80 @@ input:focus { outline: none; }
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #111; }
 ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+/* ── Routing animations ─────────────────────────────────────────────────── */
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.7); }
+}
+
+@keyframes scan-line {
+  0%   { transform: translateX(-100%); opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+
+@keyframes flow-dot {
+  0%   { left: 0%;   opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+
+@keyframes venue-appear {
+  from { opacity: 0; transform: translateY(6px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+@keyframes route-lock {
+  from { opacity: 0; transform: scaleX(0); }
+  to   { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.scanning-venue {
+  animation: venue-appear 0.3s ease forwards;
+}
+
+.flow-line {
+  position: relative;
+  height: 2px;
+  background: #1f1f1f;
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.flow-line::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 40%;
+  border-radius: 1px;
+  animation: scan-line 1.4s ease-in-out infinite;
+}
+
+.flow-line.cyan::after  { background: linear-gradient(90deg, transparent, #22d3ee, transparent); }
+.flow-line.pink::after  { background: linear-gradient(90deg, transparent, #ff007a, transparent); }
+.flow-line.blue::after  { background: linear-gradient(90deg, transparent, #3b82f6, transparent); }
+.flow-line.purple::after{ background: linear-gradient(90deg, transparent, #a78bfa, transparent); }
+
+.shimmer-text {
+  background: linear-gradient(90deg, #4b5563 0%, #9ca3af 40%, #22d3ee 50%, #9ca3af 60%, #4b5563 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 2s linear infinite;
+}
+
+.route-bar-enter {
+  animation: route-lock 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transform-origin: left;
+}
