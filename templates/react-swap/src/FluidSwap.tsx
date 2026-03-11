@@ -312,7 +312,7 @@ export default function FluidSwap() {
   const [selRoute,  setSelRoute]  = useState(0);
   const [quoting,   setQuoting]   = useState(false);
   const [quoteErr,  setQuoteErr]  = useState<string | null>(null);
-  const [step,      setStep]      = useState<"idle" | "approving" | "swapping">("idle");
+  const [step,      setStep]      = useState<"idle" | "routed" | "approving" | "swapping">("idle");
   const [txHash,    setTxHash]    = useState<Hash | null>(null);
   const [swapError, setSwapError] = useState<string | null>(null);
   const [showFrom,  setShowFrom]  = useState(false);
@@ -354,10 +354,12 @@ export default function FluidSwap() {
     }
   }, [amount, fromSym, toSym]);
 
+  // Auto-preview quote (lightweight, no route lock)
   useEffect(() => {
+    if (step === "routed") return; // don't overwrite locked route
     const t = setTimeout(fetchQuote, 600);
     return () => clearTimeout(t);
-  }, [fetchQuote]);
+  }, [fetchQuote, step]);
 
   // ── Swap execution via viem (local signing) ────────────────────────────────
 
@@ -422,6 +424,7 @@ export default function FluidSwap() {
       setStep("idle");
       setAmount("");
       setRoutes([]);
+      setSelRoute(0);
       // Refresh balance after swap
       client.getBalance("base").then((r) => { if (r.success) setUsdcBal(r.balance); }).catch(() => {});
     } catch (e: any) {
@@ -430,11 +433,35 @@ export default function FluidSwap() {
     }
   };
 
+  // ── Route (fetch + lock best price) ────────────────────────────────────────
+
+  const handleRoute = async () => {
+    const n = parseFloat(amount);
+    if (!n || n <= 0 || !FLUID_API_KEY) return;
+    setQuoting(true);
+    setQuoteErr(null);
+    setSwapError(null);
+    try {
+      const data = await client.getQuote(fromSym, toSym, amount);
+      if (data.error) { setQuoteErr(data.error); return; }
+      const sorted = [...(data.routes ?? [])].sort((a, b) => b.amountOutRaw - a.amountOutRaw);
+      setRoutes(sorted);
+      setSelRoute(0);
+      setStep("routed");
+    } catch (e: any) {
+      setQuoteErr(e?.message ?? "Network error");
+    } finally {
+      setQuoting(false);
+    }
+  };
+
   // ─── Render ───────────────────────────────────────────────────────────────
 
-  const isBusy    = step !== "idle";
+  const isBusy    = step === "approving" || step === "swapping";
   const bestRoute = routes[selRoute];
-  const canRoute  = hasWallet && routes.length > 0 && !isBusy && IS_DEPLOYED;
+  const isRouted  = step === "routed" && routes.length > 0;
+  const canRoute  = !!FLUID_API_KEY && !!amount && parseFloat(amount) > 0 && !isBusy && !isRouted;
+  const canExecute = isRouted && hasWallet && IS_DEPLOYED && !isBusy;
 
   return (
     <div style={S.card}>
@@ -491,7 +518,7 @@ export default function FluidSwap() {
             min="0"
             placeholder="0.0"
             value={amount}
-            onChange={(e) => { setAmount(e.target.value); setRoutes([]); setTxHash(null); }}
+            onChange={(e) => { setAmount(e.target.value); setRoutes([]); setTxHash(null); setStep("idle"); }}
           />
           <button style={S.tokenBtn(tokenIn.color)} onClick={() => setShowFrom(true)}>
             <span style={{ width: 18, height: 18, borderRadius: "50%", background: tokenIn.color + "30", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: 800 }}>
@@ -505,7 +532,7 @@ export default function FluidSwap() {
       {/* ── Flip ── */}
       <button
         style={S.flipBtn}
-        onClick={() => { setFromSym(toSym); setToSym(fromSym); setRoutes([]); setAmount(""); }}
+        onClick={() => { setFromSym(toSym); setToSym(fromSym); setRoutes([]); setAmount(""); setStep("idle"); }}
         title="Flip tokens"
       >⇅</button>
 
@@ -576,26 +603,61 @@ export default function FluidSwap() {
         <div style={S.warn("#f59e0b")}>Set <code>VITE_FLUID_SOR_ADDRESS</code> in .env.local.</div>
       )}
 
-      {/* ── Route button ── */}
-      <button
-        style={S.btn(
-          step === "approving" ? "#0891b2"
-          : step === "swapping" ? "#22d3ee"
-          : canRoute ? "#22d3ee"
-          : "#1a1a1a",
-          !canRoute
-        )}
-        onClick={handleSwap}
-        disabled={!canRoute}
-      >
-        {step === "approving"   ? "Approving token…"
-         : step === "swapping"  ? "Executing swap via FluidSOR…"
-         : quoting && amount    ? "Searching routes…"
-         : routes.length > 0   ? `Route via ${routes[selRoute]?.venue ?? "FluidSOR"}`
-         : !amount              ? "Enter an amount"
-         : !FLUID_API_KEY       ? "Add API key to fetch routes"
-         : "No routes found"}
-      </button>
+      {/* ── Step 1: Route via FluidSOR ── */}
+      {!isRouted && !isBusy && (
+        <button
+          style={S.btn(canRoute ? "#0e7490" : "#1a1a1a", !canRoute)}
+          onClick={handleRoute}
+          disabled={!canRoute}
+        >
+          {quoting ? "Searching all venues…"
+           : !amount ? "Enter an amount to route"
+           : !FLUID_API_KEY ? "Add API key to fetch routes"
+           : "Route via FluidSOR"}
+        </button>
+      )}
+
+      {/* ── Step 2: Execute Swap (shown after route is locked) ── */}
+      {(isRouted || isBusy) && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          {/* Locked route summary */}
+          {isRouted && bestRoute && (
+            <div style={{
+              background: "#22d3ee08", border: "1px solid #22d3ee22",
+              borderRadius: 10, padding: "0.6rem 0.85rem",
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+              fontSize: "0.78rem",
+            }}>
+              <div>
+                <span style={{ color: "#22d3ee", fontWeight: 600 }}>{bestRoute.venue}</span>
+                <span style={{ color: "#4b5563" }}> · best price locked</span>
+              </div>
+              <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                <span style={{ color: "#4ade80", fontWeight: 700 }}>{bestRoute.amountOut} {toSym}</span>
+                <button
+                  onClick={() => { setStep("idle"); setRoutes([]); }}
+                  style={{ background: "none", border: "none", color: "#4b5563", cursor: "pointer", fontSize: "0.75rem" }}
+                >✕</button>
+              </div>
+            </div>
+          )}
+          <button
+            style={S.btn(
+              step === "approving" ? "#0891b2"
+              : step === "swapping" ? "#22d3ee"
+              : "#22d3ee",
+              !canExecute
+            )}
+            onClick={handleSwap}
+            disabled={!canExecute}
+          >
+            {step === "approving" ? "Approving token…"
+             : step === "swapping" ? `Swapping via ${bestRoute?.venue ?? "FluidSOR"}…`
+             : !hasWallet ? "Add private key to execute"
+             : `Execute Swap via ${bestRoute?.venue ?? "FluidSOR"}`}
+          </button>
+        </div>
+      )}
 
       {/* ── Success ── */}
       {txHash && step === "idle" && (
