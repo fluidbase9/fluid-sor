@@ -160,18 +160,18 @@ async function promptApiKey() {
 
   while (true) {
     const key = await prompt(
-      `  ${C.cyan}?${C.reset} Paste API key ${C.dim}(fw_sor_...)${C.reset} or ${C.yellow}Enter${C.reset} to skip: `
+      `  ${C.cyan}?${C.reset} Paste API key ${C.dim}(fw_sor_...)${C.reset}: `
     );
-    if (!key) {
-      warn(`Skipped — add ${C.cyan}VITE_FLUID_API_KEY=fw_sor_...${C.reset} to ${C.gray}.env.local${C.reset} before running.`);
-      return "";
+    if (!key.trim()) {
+      err(`API key is required. Get yours at ${C.cyan}fluidnative.com${C.reset} → Developer Console → API Keys.`);
+      continue;
     }
-    if (!key.startsWith("fw_sor_")) {
+    if (!key.trim().startsWith("fw_sor_")) {
       err(`Invalid format — keys start with ${C.cyan}fw_sor_${C.reset}. Try again.`);
       continue;
     }
     ok(`API key accepted  ${C.dim}${key.slice(0, 13)}${"•".repeat(10)}${C.reset}`);
-    return key;
+    return key.trim();
   }
 }
 
@@ -183,16 +183,15 @@ async function promptSeedPhrase() {
   log(`  ${C.gray}Your seed phrase (12 words) auto-derives your Base/Ethereum private key.${C.reset}`);
   log(`  ${C.gray}No MetaMask needed — same seed you used to set up your Fluid wallet.${C.reset}`);
   log(`  ${C.yellow}!${C.reset}  ${C.gray}The seed phrase is NEVER stored. Only the derived key is written to .env.local.${C.reset}`);
-  log(`  ${C.yellow}!${C.reset}  ${C.gray}Skipping this is fine — quoting & routing work without it.${C.reset}`);
   log("");
 
   while (true) {
     const phrase = await prompt(
-      `  ${C.cyan}?${C.reset} Enter seed phrase ${C.dim}(12 words)${C.reset} or ${C.yellow}Enter${C.reset} to skip: `
+      `  ${C.cyan}?${C.reset} Enter seed phrase ${C.dim}(12 words)${C.reset}: `
     );
     if (!phrase.trim()) {
-      info("ℹ", `Skipped — quoting & routing work without it. Add ${C.cyan}VITE_FLUID_PRIVATE_KEY${C.reset} to ${C.gray}.env.local${C.reset} later to enable swap execution.`);
-      return "";
+      err(`Seed phrase is required to derive your signing key. Enter your 12-word Fluid seed phrase.`);
+      continue;
     }
     const words = phrase.trim().split(/\s+/);
     if (words.length !== 12) {
