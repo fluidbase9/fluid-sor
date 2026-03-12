@@ -116,10 +116,32 @@ const FLUID_SOR_ABI = [
 // ─── Venue display config ─────────────────────────────────────────────────────
 
 const VENUE_META: Record<string, { color: string; icon: string }> = {
-  "Fluid AMM":   { color: "#22d3ee", icon: "◈" },
-  "Uniswap V3":  { color: "#ff007a", icon: "🦄" },
-  "Aerodrome":   { color: "#3b82f6", icon: "✈" },
-  "Split":       { color: "#a78bfa", icon: "⑂" },
+  "Fluid AMM":    { color: "#22d3ee", icon: "◈"  },
+  "Uniswap V3":   { color: "#ff007a", icon: "🦄" },
+  "Aerodrome":    { color: "#3b82f6", icon: "✈"  },
+  "Split":        { color: "#a78bfa", icon: "⑂"  },
+  "Curve":        { color: "#f59e0b", icon: "⟳"  },
+  "Balancer":     { color: "#7c3aed", icon: "⬡"  },
+  "PancakeSwap":  { color: "#d97706", icon: "🥞" },
+  "SushiSwap":    { color: "#e11d48", icon: "🍣" },
+  "Velodrome":    { color: "#6366f1", icon: "⚡" },
+  "DODO":         { color: "#facc15", icon: "🦤" },
+  "KyberSwap":    { color: "#31c48d", icon: "🔷" },
+  "1inch":        { color: "#1d4ed8", icon: "🔵" },
+  "Frax":         { color: "#9ca3af", icon: "𝔽"  },
+  "Convex":       { color: "#f97316", icon: "🔺" },
+  "Bancor":       { color: "#12b886", icon: "◉"  },
+  "Trader Joe":   { color: "#ef4444", icon: "🎰" },
+  "GMX":          { color: "#06b6d4", icon: "◆"  },
+  "Camelot":      { color: "#a16207", icon: "♞"  },
+  "Platypus":     { color: "#2dd4bf", icon: "🦆" },
+  "WOOFi":        { color: "#8b5cf6", icon: "🐕" },
+  "Hashflow":     { color: "#0ea5e9", icon: "⌗"  },
+  "Maverick":     { color: "#ec4899", icon: "◀"  },
+  "Ambient":      { color: "#10b981", icon: "〰" },
+  "Clipper":      { color: "#f472b6", icon: "✂"  },
+  "Odos":         { color: "#6366f1", icon: "⊕"  },
+  "OpenOcean":    { color: "#38bdf8", icon: "🌊" },
 };
 
 function venueColor(venue: string) {
@@ -311,10 +333,31 @@ function RouteCard({
 // ─── Routing animation ────────────────────────────────────────────────────────
 
 const VENUES_SCAN = [
-  { key: "fluid",   label: "Fluid AMM",    color: "#22d3ee", icon: "◈", lineClass: "cyan"   },
-  { key: "uni",     label: "Uniswap V3",   color: "#ff007a", icon: "🦄", lineClass: "pink"   },
-  { key: "aero",    label: "Aerodrome",    color: "#3b82f6", icon: "✈",  lineClass: "blue"   },
-  { key: "split",   label: "Split Route",  color: "#a78bfa", icon: "⑂",  lineClass: "purple" },
+  { key: "Fluid",       label: "Fluid AMM",    color: "#22d3ee", icon: "◈",  lineClass: "cyan"   },
+  { key: "Uniswap",     label: "Uniswap V3",   color: "#ff007a", icon: "🦄", lineClass: "pink"   },
+  { key: "Aerodrome",   label: "Aerodrome",    color: "#3b82f6", icon: "✈",  lineClass: "blue"   },
+  { key: "Curve",       label: "Curve",        color: "#f59e0b", icon: "⟳",  lineClass: "cyan"   },
+  { key: "Balancer",    label: "Balancer",     color: "#7c3aed", icon: "⬡",  lineClass: "purple" },
+  { key: "PancakeSwap", label: "PancakeSwap",  color: "#d97706", icon: "🥞", lineClass: "pink"   },
+  { key: "SushiSwap",   label: "SushiSwap",    color: "#e11d48", icon: "🍣", lineClass: "pink"   },
+  { key: "Velodrome",   label: "Velodrome",    color: "#6366f1", icon: "⚡", lineClass: "purple" },
+  { key: "DODO",        label: "DODO",         color: "#facc15", icon: "🦤", lineClass: "cyan"   },
+  { key: "KyberSwap",   label: "KyberSwap",    color: "#31c48d", icon: "🔷", lineClass: "blue"   },
+  { key: "1inch",       label: "1inch",        color: "#1d4ed8", icon: "🔵", lineClass: "blue"   },
+  { key: "Frax",        label: "Frax",         color: "#9ca3af", icon: "𝔽",  lineClass: "cyan"   },
+  { key: "Convex",      label: "Convex",       color: "#f97316", icon: "🔺", lineClass: "pink"   },
+  { key: "Bancor",      label: "Bancor",       color: "#12b886", icon: "◉",  lineClass: "blue"   },
+  { key: "Trader Joe",  label: "Trader Joe",   color: "#ef4444", icon: "🎰", lineClass: "pink"   },
+  { key: "GMX",         label: "GMX",          color: "#06b6d4", icon: "◆",  lineClass: "cyan"   },
+  { key: "Camelot",     label: "Camelot",      color: "#a16207", icon: "♞",  lineClass: "pink"   },
+  { key: "Platypus",    label: "Platypus",     color: "#2dd4bf", icon: "🦆", lineClass: "blue"   },
+  { key: "WOOFi",       label: "WOOFi",        color: "#8b5cf6", icon: "🐕", lineClass: "purple" },
+  { key: "Hashflow",    label: "Hashflow",     color: "#0ea5e9", icon: "⌗",  lineClass: "blue"   },
+  { key: "Maverick",    label: "Maverick",     color: "#ec4899", icon: "◀",  lineClass: "pink"   },
+  { key: "Ambient",     label: "Ambient",      color: "#10b981", icon: "〰", lineClass: "blue"   },
+  { key: "Clipper",     label: "Clipper",      color: "#f472b6", icon: "✂",  lineClass: "pink"   },
+  { key: "Odos",        label: "Odos",         color: "#6366f1", icon: "⊕",  lineClass: "purple" },
+  { key: "OpenOcean",   label: "OpenOcean",    color: "#38bdf8", icon: "🌊", lineClass: "cyan"   },
 ];
 
 function RoutingAnimation({
@@ -331,7 +374,7 @@ function RoutingAnimation({
         i++;
         setVisibleVenues(i);
         if (i >= VENUES_SCAN.length) clearInterval(timerRef.current!);
-      }, 260);
+      }, 100);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
       setVisibleVenues(VENUES_SCAN.length);
@@ -351,7 +394,7 @@ function RoutingAnimation({
           animation: scanning ? "pulse-dot 0.9s ease-in-out infinite" : "none" }} />
         {scanning
           ? <span className="shimmer-text" style={{ fontSize: "0.72rem", fontWeight: 600 }}>
-              Indexing all venues on Base…
+              Scanning {VENUES_SCAN.length} venues…
             </span>
           : <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "#22d3ee" }}>
               {routes.length} route{routes.length !== 1 ? "s" : ""} found · best price auto-selected
@@ -373,9 +416,9 @@ function RoutingAnimation({
         </div>
 
         {/* Center — venue lanes */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.22rem", maxHeight: 180, overflowY: "auto" }}>
           {VENUES_SCAN.slice(0, visibleVenues).map((v, i) => {
-            const matchedRoute = routes.find(r => r.venue.includes(v.key === "fluid" ? "Fluid" : v.key === "uni" ? "Uniswap" : v.key === "aero" ? "Aerodrome" : "Split"));
+            const matchedRoute = routes.find(r => r.venue.includes(v.key));
             const isBest = !scanning && matchedRoute && routes[0]?.venue === matchedRoute.venue;
             return (
               <div key={v.key} className="scanning-venue" style={{ animationDelay: `${i * 0.05}s` }}>
