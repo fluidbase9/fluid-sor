@@ -94,7 +94,7 @@ export class FluidWalletClient {
   deactivateKey(email: string): Promise<{ success: boolean; error?: string }>;
   getBalance(chain?: "base" | "ethereum" | "solana"): Promise<BalanceResponse>;
   send(params: { chain: "base" | "ethereum" | "solana"; to: string; amount: string; signedTx: string }): Promise<SendResponse>;
-  getQuote(tokenIn: string, tokenOut: string, amountIn: string): Promise<SorQuoteResponse>;
+  getQuote(tokenIn: string, tokenOut: string, amountIn: string, network?: "base" | "ethereum" | "solana" | "injective"): Promise<SorQuoteResponse>;
   swap(params: { tokenIn: string; tokenOut: string; amountIn: string; amountOut: string; signedTx: string }): Promise<SwapResponse>;
   setApiKey(apiKey: string): void;
 }

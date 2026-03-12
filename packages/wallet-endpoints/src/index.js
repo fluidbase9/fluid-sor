@@ -121,8 +121,8 @@ export class FluidWalletClient {
    * @param {string} tokenOut  e.g. "WETH"
    * @param {string} amountIn  e.g. "100"
    */
-  async getQuote(tokenIn, tokenOut, amountIn) {
-    const url = `${this.baseUrl}/api/sor/quote?tokenIn=${tokenIn}&tokenOut=${tokenOut}&amountIn=${amountIn}`;
+  async getQuote(tokenIn, tokenOut, amountIn, network = "base") {
+    const url = `${this.baseUrl}/api/sor/quote?tokenIn=${tokenIn}&tokenOut=${tokenOut}&amountIn=${amountIn}&network=${network}`;
     const res = await fetch(url, { headers: this._authHeader });
     return res.json();
   }

@@ -14,6 +14,8 @@ import {
 } from "@fluidwalletbase/wallet-endpoints";
 import {
   TOKENS,
+  TOKENS_BY_NETWORK,
+  NETWORKS,
   FLUID_SOR_ADDRESS,
   FLUID_SITE,
   IS_DEPLOYED,
@@ -23,6 +25,7 @@ import {
   CHAIN,
   BASE_RPC_URL,
   type Token,
+  type Network,
 } from "./config";
 
 // ─── Fluid SDK client ─────────────────────────────────────────────────────────
@@ -222,8 +225,8 @@ const S = {
 // ─── Token selector modal ──────────────────────────────────────────────────────
 
 function TokenSelect({
-  value, exclude, onChange, onClose,
-}: { value: string; exclude: string; onChange: (t: string) => void; onClose: () => void }) {
+  value, exclude, tokens, onChange, onClose,
+}: { value: string; exclude: string; tokens: Record<string, Token>; onChange: (t: string) => void; onClose: () => void }) {
   return (
     <div
       style={{
@@ -233,11 +236,11 @@ function TokenSelect({
       onClick={onClose}
     >
       <div
-        style={{ background: "#111", border: "1px solid #2a2a2a", borderRadius: 16, padding: "1.25rem", minWidth: 220 }}
+        style={{ background: "#111", border: "1px solid #2a2a2a", borderRadius: 16, padding: "1.25rem", minWidth: 220, maxHeight: "70vh", overflowY: "auto" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "0.75rem" }}>Select token</div>
-        {Object.values(TOKENS).filter((t) => t.symbol !== exclude).map((t) => (
+        {Object.values(tokens).filter((t) => t.symbol !== exclude).map((t) => (
           <button
             key={t.symbol}
             onClick={() => { onChange(t.symbol); onClose(); }}
@@ -250,11 +253,11 @@ function TokenSelect({
             }}
           >
             <span style={{ width: 28, height: 28, borderRadius: "50%", background: t.color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 800, color: t.color }}>
-              {t.symbol.slice(0, 1)}
+              {t.symbol.slice(0, 2)}
             </span>
             <div style={{ textAlign: "left" }}>
               <div style={{ fontWeight: 700, fontSize: "0.875rem" }}>{t.symbol}</div>
-              <div style={{ fontSize: "0.65rem", color: "#4b5563" }}>{t.address.slice(0, 10)}…</div>
+              <div style={{ fontSize: "0.65rem", color: "#4b5563" }}>{t.address.slice(0, 12)}…</div>
             </div>
           </button>
         ))}
@@ -429,13 +432,14 @@ function RoutingAnimation({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function FluidSwap() {
+  const [network,   setNetwork]   = useState<Network>("base");
   const [fromSym,   setFromSym]   = useState("USDC");
   const [toSym,     setToSym]     = useState("WETH");
   const [amount,    setAmount]    = useState("");
   const [slippage,  setSlippage]  = useState(0.5);
   const [routes,    setRoutes]    = useState<SorRoute[]>([]);
   const [selRoute,  setSelRoute]  = useState(0);
-  const [scanning,  setScanning]  = useState(false); // shows animation immediately on amount change
+  const [scanning,  setScanning]  = useState(false);
   const [quoting,   setQuoting]   = useState(false);
   const [quoteErr,  setQuoteErr]  = useState<string | null>(null);
   const [step,      setStep]      = useState<"idle" | "routed" | "approving" | "swapping">("idle");
@@ -445,8 +449,21 @@ export default function FluidSwap() {
   const [showTo,    setShowTo]    = useState(false);
   const [usdcBal,   setUsdcBal]   = useState<string | null>(null);
 
-  const tokenIn  = TOKENS[fromSym];
-  const tokenOut = TOKENS[toSym];
+  const networkTokens = TOKENS_BY_NETWORK[network];
+  const networkMeta   = NETWORKS.find(n => n.id === network)!;
+  const tokenSymbols  = Object.keys(networkTokens);
+
+  // Reset tokens when network changes
+  const handleNetworkChange = (net: Network) => {
+    const tokens = Object.keys(TOKENS_BY_NETWORK[net]);
+    setNetwork(net);
+    setFromSym(tokens[0]);
+    setToSym(tokens[1] ?? tokens[0]);
+    setRoutes([]); setAmount(""); setStep("idle"); setQuoteErr(null);
+  };
+
+  const tokenIn  = networkTokens[fromSym]  ?? Object.values(networkTokens)[0];
+  const tokenOut = networkTokens[toSym]    ?? Object.values(networkTokens)[1];
   const hasWallet = !!account;
   const address   = account?.address;
 
@@ -468,7 +485,7 @@ export default function FluidSwap() {
     setScanning(true);
     setQuoteErr(null);
     try {
-      const data = await client.getQuote(fromSym, toSym, amount);
+      const data = await client.getQuote(fromSym, toSym, amount, network);
       if (data.error) { setQuoteErr(data.error); setRoutes([]); return; }
       const sorted = [...(data.routes ?? [])].sort((a, b) => b.amountOutRaw - a.amountOutRaw);
       setRoutes(sorted);
@@ -480,7 +497,7 @@ export default function FluidSwap() {
       setQuoting(false);
       setScanning(false);
     }
-  }, [amount, fromSym, toSym]);
+  }, [amount, fromSym, toSym, network]);
 
   // Trigger scanning animation immediately when amount changes
   useEffect(() => {
@@ -579,7 +596,7 @@ export default function FluidSwap() {
     setQuoteErr(null);
     setSwapError(null);
     try {
-      const data = await client.getQuote(fromSym, toSym, amount);
+      const data = await client.getQuote(fromSym, toSym, amount, network);
       if (data.error) { setQuoteErr(data.error); return; }
       const sorted = [...(data.routes ?? [])].sort((a, b) => b.amountOutRaw - a.amountOutRaw);
       setRoutes(sorted);
@@ -595,14 +612,33 @@ export default function FluidSwap() {
 
   // ─── Render ───────────────────────────────────────────────────────────────
 
-  const isBusy    = step === "approving" || step === "swapping";
-  const bestRoute = routes[selRoute];
-  const isRouted  = step === "routed" && routes.length > 0;
-  const canRoute  = !!FLUID_API_KEY && !!amount && parseFloat(amount) > 0 && !isBusy && !isRouted;
-  const canExecute = isRouted && hasWallet && IS_DEPLOYED && !isBusy;
+  const isBusy     = step === "approving" || step === "swapping";
+  const bestRoute  = routes[selRoute];
+  const isRouted   = step === "routed" && routes.length > 0;
+  const canRoute   = !!FLUID_API_KEY && !!amount && parseFloat(amount) > 0 && !isBusy && !isRouted;
+  const canExecute = isRouted && hasWallet && IS_DEPLOYED && !isBusy && networkMeta.canSwap;
 
   return (
     <div style={S.card}>
+
+      {/* ── Network selector ── */}
+      <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+        {NETWORKS.map((net) => (
+          <button
+            key={net.id}
+            onClick={() => handleNetworkChange(net.id)}
+            style={{
+              flex: 1, minWidth: 80, padding: "0.45rem 0.5rem", borderRadius: 10, fontSize: "0.72rem", fontWeight: 700,
+              border: network === net.id ? `1px solid ${net.color}66` : "1px solid #1f1f1f",
+              background: network === net.id ? net.color + "15" : "#0d0d0d",
+              color: network === net.id ? net.color : "#4b5563",
+              cursor: "pointer", transition: "all 0.15s", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.3rem",
+            }}
+          >
+            <span>{net.icon}</span> {net.label}
+          </button>
+        ))}
+      </div>
 
       {/* ── Missing API key ── */}
       {!FLUID_API_KEY && (
@@ -797,6 +833,7 @@ export default function FluidSwap() {
           >
             {step === "approving" ? "Approving token…"
              : step === "swapping" ? `Swapping via ${bestRoute?.venue ?? "FluidSOR"}…`
+             : !networkMeta.canSwap ? `Execution on ${networkMeta.label} — coming soon`
              : !hasWallet ? "Add private key to execute"
              : `Execute Swap via ${bestRoute?.venue ?? "FluidSOR"}`}
           </button>
@@ -834,11 +871,11 @@ export default function FluidSwap() {
 
       {/* ── Token selector modals ── */}
       {showFrom && (
-        <TokenSelect value={fromSym} exclude={toSym}
+        <TokenSelect value={fromSym} exclude={toSym} tokens={networkTokens}
           onChange={(t) => { setFromSym(t); setRoutes([]); }} onClose={() => setShowFrom(false)} />
       )}
       {showTo && (
-        <TokenSelect value={toSym} exclude={fromSym}
+        <TokenSelect value={toSym} exclude={fromSym} tokens={networkTokens}
           onChange={(t) => { setToSym(t); setRoutes([]); }} onClose={() => setShowTo(false)} />
       )}
     </div>
