@@ -27,9 +27,9 @@ export const IS_DEPLOYED =
 export const FLUID_API_KEY = import.meta.env.VITE_FLUID_API_KEY as string | undefined;
 
 /**
- * Your Base wallet private key — used to sign token approvals and swaps locally.
+ * Your Base wallet private key — OPTIONAL.
+ * Only needed to execute swaps. Quoting and balance work without it.
  * ⚠ NEVER commit this to git. Keep it in .env.local only.
- * Get it: MetaMask → Account Details → Export Private Key (0x...)
  * Add to .env.local:  VITE_FLUID_PRIVATE_KEY=0x...
  */
 export const FLUID_PRIVATE_KEY = import.meta.env.VITE_FLUID_PRIVATE_KEY as string | undefined;

@@ -1,10 +1,66 @@
 #!/usr/bin/env node
 "use strict";
 
-const path       = require("path");
-const fs         = require("fs");
-const readline   = require("readline");
+const path         = require("path");
+const fs           = require("fs");
+const readline     = require("readline");
+const crypto       = require("crypto");
 const { execSync } = require("child_process");
+
+// ─── BIP-39 → BIP-44 private key derivation (pure Node.js crypto) ─────────────
+
+/** BIP-39: mnemonic + optional passphrase → 64-byte seed */
+function mnemonicToSeed(mnemonic, passphrase = "") {
+  return crypto.pbkdf2Sync(
+    Buffer.from(mnemonic.normalize("NFKD"), "utf8"),
+    Buffer.from(("mnemonic" + passphrase).normalize("NFKD"), "utf8"),
+    2048, 64, "sha512"
+  );
+}
+
+/** secp256k1 compressed public key from a 32-byte private key */
+function compressedPubKey(privKeyBuf) {
+  const ecdh = crypto.createECDH("secp256k1");
+  ecdh.setPrivateKey(privKeyBuf);
+  return ecdh.getPublicKey(null, "compressed"); // 33 bytes
+}
+
+/** BIP-32 child key derivation (hardened or normal) */
+function deriveChild(node, index) {
+  const hardened = (index >>> 0) >= 0x80000000;
+  const data = Buffer.alloc(37);
+  if (hardened) {
+    data[0] = 0x00;
+    node.key.copy(data, 1);
+  } else {
+    compressedPubKey(node.key).copy(data, 0);
+  }
+  data.writeUInt32BE(index >>> 0, 33);
+  const I  = crypto.createHmac("sha512", node.chainCode).update(data).digest();
+  const IL = I.slice(0, 32);
+  const n  = BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141");
+  const childBig = (BigInt("0x" + IL.toString("hex")) + BigInt("0x" + node.key.toString("hex"))) % n;
+  return {
+    key:       Buffer.from(childBig.toString(16).padStart(64, "0"), "hex"),
+    chainCode: I.slice(32),
+  };
+}
+
+/**
+ * Derives the EVM private key from a BIP-39 mnemonic.
+ * Path: m/44'/60'/0'/0/0  (standard Ethereum / Base BIP-44)
+ * Returns the private key as "0x..." hex string.
+ */
+function deriveEvmPrivateKey(mnemonic) {
+  const seed = mnemonicToSeed(mnemonic.trim().toLowerCase());
+  const Imaster = crypto.createHmac("sha512", "Bitcoin seed").update(seed).digest();
+  let node = { key: Imaster.slice(0, 32), chainCode: Imaster.slice(32) };
+  // m / 44' / 60' / 0' / 0 / 0
+  for (const idx of [0x8000002C, 0x8000003C, 0x80000000, 0, 0]) {
+    node = deriveChild(node, idx);
+  }
+  return "0x" + node.key.toString("hex");
+}
 
 // ─── ANSI colours ─────────────────────────────────────────────────────────────
 
@@ -119,30 +175,39 @@ async function promptApiKey() {
   }
 }
 
-// ─── Interactive private key prompt ───────────────────────────────────────────
+// ─── Derive private key from seed phrase ──────────────────────────────────────
 
-async function promptPrivateKey() {
+async function promptSeedPhrase() {
   log("");
-  log(`  ${C.bold}Base Wallet Private Key${C.reset}`);
-  log(`  ${C.gray}Used to sign token approvals and swaps directly — no MetaMask needed.${C.reset}`);
-  log(`  ${C.gray}Get it: MetaMask → Account Details → Export Private Key (starts with 0x)${C.reset}`);
-  log(`  ${C.yellow}!${C.reset}  ${C.gray}Never share this key or commit it to git. Stored in .env.local only.${C.reset}`);
+  log(`  ${C.bold}Wallet Setup — Derive signing key from your Fluid seed phrase${C.reset}`);
+  log(`  ${C.gray}Your seed phrase (12 words) auto-derives your Base/Ethereum private key.${C.reset}`);
+  log(`  ${C.gray}No MetaMask needed — same seed you used to set up your Fluid wallet.${C.reset}`);
+  log(`  ${C.yellow}!${C.reset}  ${C.gray}The seed phrase is NEVER stored. Only the derived key is written to .env.local.${C.reset}`);
+  log(`  ${C.yellow}!${C.reset}  ${C.gray}Skipping this is fine — quoting & routing work without it.${C.reset}`);
   log("");
 
   while (true) {
-    const key = await prompt(
-      `  ${C.cyan}?${C.reset} Paste private key ${C.dim}(0x...)${C.reset} or ${C.yellow}Enter${C.reset} to skip: `
+    const phrase = await prompt(
+      `  ${C.cyan}?${C.reset} Enter seed phrase ${C.dim}(12 words)${C.reset} or ${C.yellow}Enter${C.reset} to skip: `
     );
-    if (!key) {
-      warn(`Skipped — add ${C.cyan}VITE_FLUID_PRIVATE_KEY=0x...${C.reset} to ${C.gray}.env.local${C.reset} to enable swapping.`);
+    if (!phrase.trim()) {
+      info("ℹ", `Skipped — quoting & routing work without it. Add ${C.cyan}VITE_FLUID_PRIVATE_KEY${C.reset} to ${C.gray}.env.local${C.reset} later to enable swap execution.`);
       return "";
     }
-    if (!key.startsWith("0x") || key.length !== 66) {
-      err(`Invalid format — must be ${C.cyan}0x${C.reset} followed by 64 hex characters. Try again.`);
+    const words = phrase.trim().split(/\s+/);
+    if (words.length !== 12) {
+      err(`Expected 12 words, got ${words.length}. Try again.`);
       continue;
     }
-    ok(`Private key accepted  ${C.dim}${key.slice(0, 10)}${"•".repeat(12)}${C.reset}`);
-    return key;
+    try {
+      const privateKey = deriveEvmPrivateKey(phrase);
+      ok(`Key derived from seed phrase  ${C.dim}${privateKey.slice(0, 10)}${"•".repeat(12)}${C.reset}`);
+      log(`  ${C.gray}Path: m/44'/60'/0'/0/0  (standard Ethereum / Base)${C.reset}`);
+      return privateKey;
+    } catch (e) {
+      err(`Derivation failed: ${e.message}. Check your seed phrase and try again.`);
+      continue;
+    }
   }
 }
 
@@ -171,9 +236,9 @@ async function main() {
   step(1, TOTAL_STEPS, "Fluid API key setup");
   const apiKey = await promptApiKey();
 
-  // ── Step 2: Private key ────────────────────────────────────────────────────
-  step(2, TOTAL_STEPS, "Wallet private key setup");
-  const privateKey = await promptPrivateKey();
+  // ── Step 2: Derive private key from seed phrase ────────────────────────────
+  step(2, TOTAL_STEPS, "Wallet setup — derive signing key from seed phrase");
+  const privateKey = await promptSeedPhrase();
 
   // ── Step 3: Scaffold ───────────────────────────────────────────────────────
   step(3, TOTAL_STEPS, `Scaffolding ${C.cyan}${projectName}${C.reset}…`);
@@ -208,9 +273,10 @@ async function main() {
     "# Derive yours: fluidnative.com → Developer Console → API Keys tab",
     apiKeyLine,
     "",
-    "# ─── Base wallet private key (REQUIRED for swapping) ────────────────────────",
+    "# ─── Base wallet private key (OPTIONAL — only needed to execute swaps) ────────",
     "# ⚠ NEVER commit this file to git. It is already in .gitignore.",
-    "# Export from MetaMask → Account Details → Export Private Key",
+    "# Without this: quoting, routing, and balance work fine. Swap execution is disabled.",
+    "# To enable execution: export your 0x... private key for the wallet registered above.",
     privateKeyLine,
     "",
     "# ─── FluidSOR contract (pre-filled — live on Base mainnet) ──────────────────",
@@ -225,8 +291,8 @@ async function main() {
 
   if (apiKey)     ok(`API key written to ${C.gray}.env.local${C.reset}`);
   else            warn(`API key missing — open ${C.gray}.env.local${C.reset} and add ${C.cyan}VITE_FLUID_API_KEY${C.reset}`);
-  if (privateKey) ok(`Private key written to ${C.gray}.env.local${C.reset}  ${C.green}(swap-ready)${C.reset}`);
-  else            warn(`Private key missing — open ${C.gray}.env.local${C.reset} and add ${C.cyan}VITE_FLUID_PRIVATE_KEY${C.reset}`);
+  if (privateKey) ok(`Private key written to ${C.gray}.env.local${C.reset}  ${C.green}(swap execution enabled)${C.reset}`);
+  else            info(`ℹ`, `No private key — quoting & routing work. Add ${C.cyan}VITE_FLUID_PRIVATE_KEY${C.reset} later to enable swap execution.`);
 
   // ── Done ───────────────────────────────────────────────────────────────────
   log("");
@@ -241,8 +307,7 @@ async function main() {
     info("   ", `Get it: ${C.cyan}fluidnative.com${C.reset} → Developer Console → API Keys`);
   }
   if (!privateKey) {
-    info(`${stepN++}.`, `${C.yellow}[Required]${C.reset} Add ${C.cyan}VITE_FLUID_PRIVATE_KEY=0x...${C.reset} to ${C.gray}.env.local${C.reset}`);
-    info("   ", `Export: MetaMask → Account Details → Export Private Key`);
+    info(`${stepN++}.`, `${C.dim}[Optional]${C.reset} Add ${C.cyan}VITE_FLUID_PRIVATE_KEY=0x...${C.reset} to ${C.gray}.env.local${C.reset} ${C.dim}(enables swap execution)${C.reset}`);
   }
   info(`${stepN}.`, `${C.cyan}npm run dev${C.reset}  — opens at http://localhost:5173`);
 

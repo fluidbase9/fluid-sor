@@ -615,11 +615,11 @@ export default function FluidSwap() {
         </div>
       )}
 
-      {/* ── Missing private key ── */}
-      {!hasWallet && (
-        <div style={S.warn("#fbbf24")}>
-          <strong>Wallet not configured.</strong> Add{" "}
-          <code>VITE_FLUID_PRIVATE_KEY=0x...</code> to <code>.env.local</code> to enable swapping.
+      {/* ── Missing private key (soft info, not a warning) ── */}
+      {!hasWallet && FLUID_API_KEY && (
+        <div style={{ ...S.warn("#6b7280"), fontSize: "0.74rem" }}>
+          <strong style={{ color: "#9ca3af" }}>Quoting active.</strong>{" "}
+          To enable swap execution, add <code>VITE_FLUID_PRIVATE_KEY=0x...</code> to <code>.env.local</code>.
         </div>
       )}
 
