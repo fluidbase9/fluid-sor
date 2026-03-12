@@ -3,11 +3,11 @@ import {
   createPublicClient,
   createWalletClient,
   http,
-  privateKeyToAccount,
   encodeFunctionData,
   parseUnits,
   type Hash,
 } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import {
   FluidWalletClient,
   type SorRoute,
