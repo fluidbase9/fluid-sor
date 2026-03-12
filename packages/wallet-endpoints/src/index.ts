@@ -11,22 +11,23 @@
  * The seed phrase NEVER leaves the browser / your server.
  * Only a SHA-256 hash of the derived API key is sent to the Fluid backend.
  *
- * Send / Swap use a relay model:
- *   1. Build + sign the transaction locally using your private key
- *      (derived from your seed phrase via ethers / @solana/web3.js)
- *   2. Pass the signed raw transaction to send() or swap()
- *   3. Fluid verifies the signer matches your registered address, broadcasts,
- *      and records the transaction to your developer history
+ * Send / Swap use server-side execution:
+ *   The Fluid backend executes transactions using the developer's Fluid in-app
+ *   wallet (derived from their email via walletDerivationService).
+ *   No local signing required — just pass chain, to, amount (for send) or
+ *   tokenIn, tokenOut, amountIn (for swap).
  */
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface WalletSet {
   mnemonic:    string;   // BIP-39 seed phrase (12 words) — keep secret, never send to server
-  ethAddress:  string;   // Ethereum mainnet address  (m/44'/60'/0'/0/0)
-  baseAddress: string;   // Base mainnet address      (same key as ETH — Base is EVM L2)
-  solAddress:  string;   // Solana mainnet address    (m/44'/501'/0'/0')
   apiKey:      string;   // Fluid SDK key: fw_sor_... (HMAC-SHA256 of mnemonic, client-side only)
+  // Wallet addresses are derived server-side from email via walletDerivationService.
+  // The fields below are returned by registerKey() after server-side derivation.
+  ethAddress?:  string;   // Ethereum mainnet address (server-derived)
+  baseAddress?: string;   // Base mainnet address     (server-derived)
+  solAddress?:  string;   // Solana mainnet address   (server-derived)
 }
 
 export interface RegisterKeyResponse {
@@ -238,43 +239,21 @@ export class FluidWalletClient {
   // ── Send ───────────────────────────────────────────────────────────────────
 
   /**
-   * Relay a signed USDC send transaction through Fluid.
+   * Send USDC through Fluid. The server executes the transaction using your
+   * Fluid in-app wallet (derived server-side from your email). No local signing required.
    *
-   * Fluid verifies the signer matches your registered address, broadcasts the
-   * transaction on-chain, and records it to your developer history.
-   *
-   * You must sign the transaction locally before calling this method.
-   *
-   * EVM signing example (ethers v6):
-   * ```ts
-   * import { ethers } from "ethers";
-   *
-   * const wallet   = ethers.Wallet.fromPhrase(mnemonic).connect(provider);
-   * const USDC     = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"; // Base USDC
-   * const erc20    = new ethers.Contract(USDC, ["function transfer(address,uint256)"], wallet);
-   * const tx       = await erc20.transfer.populateTransaction(to, ethers.parseUnits(amount, 6));
-   * const signedTx = await wallet.signTransaction({ ...tx, chainId: 8453n });
-   *
-   * await client.send({ chain: "base", to, amount, signedTx });
-   * ```
-   *
-   * Solana signing example (@solana/web3.js):
-   * ```ts
-   * // Build + sign the SPL token transfer, then:
-   * const signedTx = tx.serialize().toString("base64");
-   * await client.send({ chain: "solana", to, amount, signedTx });
-   * ```
+   * For Solana, a signed transaction is still required (server-side Solana execution coming soon).
    *
    * @param params.chain     "base" | "ethereum" | "solana"
    * @param params.to        Recipient address
    * @param params.amount    Amount of USDC to send (decimal string, e.g. "10.50")
-   * @param params.signedTx  Signed raw transaction — "0x..." for EVM, base64 for Solana
+   * @param params.signedTx  Optional — only required for Solana (base64 encoded tx)
    */
   async send(params: {
-    chain:    "base" | "ethereum" | "solana";
-    to:       string;
-    amount:   string;
-    signedTx: string;
+    chain:     "base" | "ethereum" | "solana";
+    to:        string;
+    amount:    string;
+    signedTx?: string;
   }): Promise<SendResponse> {
     const res = await fetch(`${this.baseUrl}/api/v1/wallet/send`, {
       method:  "POST",
@@ -289,17 +268,24 @@ export class FluidWalletClient {
   /**
    * Get the best swap routes from the Fluid Smart Order Router.
    *
-   * Supported pairs (USDC must be one side):
-   *   USDC ↔ USDT, USDC ↔ WETH
+   * Supported networks and their routers:
+   *   base      → Fluid AMM, Uniswap V3, Aerodrome, PancakeSwap, SushiSwap, Odos, Balancer + more
+   *   ethereum  → Uniswap V3, SushiSwap, PancakeSwap, Balancer + more
+   *   solana    → Jupiter (aggregates Raydium, Orca, Meteora, Phoenix, etc.)
+   *   injective → Helix DEX (price-based)
    *
-   * Use the returned best route's amountOut when building your swap transaction.
-   *
-   * @param tokenIn   e.g. "USDC"
-   * @param tokenOut  e.g. "WETH"
+   * @param tokenIn   e.g. "SOL", "USDC", "WETH"
+   * @param tokenOut  e.g. "USDC", "USDT", "WETH"
    * @param amountIn  e.g. "100"
+   * @param network   "base" | "ethereum" | "solana" | "injective"  (default: "base")
    */
-  async getQuote(tokenIn: string, tokenOut: string, amountIn: string): Promise<SorQuoteResponse> {
-    const url = `${this.baseUrl}/api/sor/quote?tokenIn=${tokenIn}&tokenOut=${tokenOut}&amountIn=${amountIn}`;
+  async getQuote(
+    tokenIn:  string,
+    tokenOut: string,
+    amountIn: string,
+    network:  "base" | "ethereum" | "solana" | "injective" = "base",
+  ): Promise<SorQuoteResponse> {
+    const url = `${this.baseUrl}/api/sor/wallet-quote?tokenIn=${tokenIn}&tokenOut=${tokenOut}&amountIn=${amountIn}&network=${network}`;
     const res = await fetch(url, { headers: this.authHeader });
     return res.json();
   }
@@ -307,51 +293,27 @@ export class FluidWalletClient {
   // ── SOR Swap (execute) ────────────────────────────────────────────────────
 
   /**
-   * Relay a signed FluidSOR swap transaction through Fluid.
+   * Execute a FluidSOR swap through Fluid. The server executes the swap using
+   * your Fluid in-app wallet (derived server-side from your email).
+   * No local signing required — just provide the token symbols and amounts.
    *
    * Flow:
    *   1. Call getQuote() to get routes + amountOut
-   *   2. Build a transaction calling FluidSOR.swap() on Base mainnet
-   *      (contract address from VITE_FLUID_SOR_ADDRESS / fluidnative.com)
-   *   3. Sign the transaction locally with your seed-phrase-derived private key
-   *   4. Call swap() — Fluid verifies, broadcasts, and records the swap
-   *
-   * Signing example (ethers v6):
-   * ```ts
-   * import { ethers } from "ethers";
-   *
-   * const provider = new ethers.JsonRpcProvider("https://mainnet.base.org");
-   * const wallet   = ethers.Wallet.fromPhrase(mnemonic).connect(provider);
-   *
-   * const sorAbi   = ["function swap(address,address,uint256,uint256,uint8) returns (uint256)"];
-   * const sor      = new ethers.Contract(SOR_ADDRESS, sorAbi, wallet);
-   *
-   * const quote    = await client.getQuote("USDC", "WETH", "100");
-   * const best     = quote.routes[0];
-   * const tx       = await sor.swap.populateTransaction(
-   *   USDC_ADDRESS, WETH_ADDRESS,
-   *   ethers.parseUnits("100", 6),
-   *   ethers.parseUnits(best.amountOut, 18),
-   *   0  // venue index: 0=Fluid, 1=Uniswap, 2=Aerodrome
-   * );
-   * const signedTx = await wallet.signTransaction({ ...tx, chainId: 8453n });
-   *
-   * await client.swap({ tokenIn: "USDC", tokenOut: "WETH", amountIn: "100",
-   *                     amountOut: best.amountOut, signedTx });
-   * ```
+   *   2. Call swap() with tokenIn, tokenOut, amountIn, and amountOut from the quote
+   *   3. Fluid executes the swap server-side and records it to your swap history
    *
    * @param params.tokenIn   Input token symbol  (e.g. "USDC")
    * @param params.tokenOut  Output token symbol (e.g. "WETH")
    * @param params.amountIn  Amount in           (e.g. "100")
    * @param params.amountOut Expected amount out from getQuote (e.g. "0.03521")
-   * @param params.signedTx  Signed raw EVM transaction — "0x..."
+   * @param params.signedTx  Optional — accepted for backwards compat but not required
    */
   async swap(params: {
-    tokenIn:   string;
-    tokenOut:  string;
-    amountIn:  string;
-    amountOut: string;
-    signedTx:  string;
+    tokenIn:    string;
+    tokenOut:   string;
+    amountIn:   string;
+    amountOut?: string;
+    signedTx?:  string;
   }): Promise<SwapResponse> {
     const res = await fetch(`${this.baseUrl}/api/v1/sor/swap`, {
       method:  "POST",

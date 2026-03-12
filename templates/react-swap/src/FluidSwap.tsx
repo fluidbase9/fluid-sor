@@ -288,44 +288,99 @@ function TokenSelect({
   );
 }
 
-// ─── Route card ───────────────────────────────────────────────────────────────
+// ─── Route card (compact grid tile) ──────────────────────────────────────────
 
 function RouteCard({
   route, toSym, selected, onClick, rank,
 }: { route: SorRoute; toSym: string; selected: boolean; onClick: () => void; rank: number }) {
   const { color, icon } = venueColor(route.venue);
-  const impact = parseFloat(route.priceImpact);
+  const isBest = rank === 0;
+  const rankLabels = ["BEST", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th", "11th", "12th"];
+  const rankLabel  = rankLabels[rank] ?? `${rank + 1}th`;
+  const rankColor  = rank === 0 ? "#4ade80" : rank === 1 ? "#facc15" : rank === 2 ? "#fb923c" : "#6b7280";
+
+  // Shorten venue name so it fits in a narrow tile
+  const shortName = route.venue
+    .replace(" Aggregator", "")
+    .replace(" Stable AMM", " AMM")
+    .replace(" Volatile", " Vol")
+    .replace(" V3 ", " ")
+    .replace("PancakeSwap", "Pancake")
+    .replace("SushiSwap", "Sushi")
+    .replace("Fluid AMM + Uni V3", "Fluid Split")
+    .replace("Velodrome V2", "Velodrome");
 
   return (
     <button
       onClick={onClick}
       style={{
-        textAlign: "left", padding: "0.8rem 0.9rem", borderRadius: 12,
-        border: selected ? `1px solid ${color}66` : "1px solid #1f1f1f",
-        background: selected ? color + "0a" : "#0d0d0d",
-        cursor: "pointer", width: "100%", transition: "all 0.15s",
+        position: "relative",
+        textAlign: "left",
+        padding: "0.65rem 0.6rem 0.55rem",
+        borderRadius: 10,
+        border: selected
+          ? `1.5px solid ${color}88`
+          : isBest
+            ? `1px solid ${color}44`
+            : "1px solid #1f1f1f",
+        background: selected ? color + "12" : isBest ? color + "08" : "#0d0d0d",
+        cursor: "pointer",
+        width: "100%",
+        transition: "all 0.15s",
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.3rem",
+        minHeight: 80,
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span style={{ fontSize: "1rem" }}>{icon}</span>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: "0.875rem", color: "#fff" }}>{route.venue}</div>
-            <div style={{ fontSize: "0.65rem", color: "#4b5563", marginTop: "0.1rem" }}>
-              {impact > 0 ? `${impact.toFixed(3)}% impact` : "< 0.001% impact"} · est. {route.gasEstimate} gas
-            </div>
-          </div>
-        </div>
-        <div style={{ textAlign: "right" }}>
-          <div style={{ fontWeight: 700, fontSize: "0.95rem", color: rank === 0 ? "#4ade80" : "#fff" }}>
-            {route.amountOut} {toSym}
-          </div>
-          <div style={{ display: "flex", gap: "0.3rem", justifyContent: "flex-end", marginTop: "0.25rem" }}>
-            {route.badge && <span style={S.badge(color)}>{route.badge}</span>}
-            {rank === 0 && <span style={S.badge("#4ade80")}>Best</span>}
-          </div>
-        </div>
+      {/* Rank badge — shown on every card */}
+      <span style={{
+        position: "absolute", top: 5, right: 5,
+        background: rankColor + "22", border: `1px solid ${rankColor}55`,
+        color: rankColor, borderRadius: 4,
+        fontSize: "0.48rem", fontWeight: 800, padding: "0.1rem 0.3rem",
+        letterSpacing: "0.05em", textTransform: "uppercase",
+      }}>{rankLabel}</span>
+
+      {/* Icon + name row */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+        <span style={{ fontSize: "0.85rem", lineHeight: 1 }}>{icon}</span>
+        <span style={{
+          fontSize: "0.62rem", fontWeight: 700, color: color,
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          maxWidth: "calc(100% - 20px)",
+        }}>{shortName}</span>
       </div>
+
+      {/* Amount out — full precision */}
+      <div style={{
+        fontWeight: 800,
+        fontSize: "0.75rem",
+        color: rank < 3 ? rankColor : "#e5e7eb",
+        letterSpacing: "-0.01em",
+        wordBreak: "break-all",
+        lineHeight: 1.2,
+      }}>
+        {route.amountOut}
+        <span style={{ fontSize: "0.58rem", color: "#6b7280", marginLeft: "0.2rem" }}>{toSym}</span>
+      </div>
+
+      {/* Fee + gas row */}
+      <div style={{ fontSize: "0.55rem", color: "#374151", display: "flex", justifyContent: "space-between" }}>
+        <span>{parseFloat(route.priceImpact).toFixed(2)}% fee</span>
+        <span>{route.gasEstimate}</span>
+      </div>
+
+      {/* Badge */}
+      {route.badge && (
+        <span style={{
+          background: color + "18", border: `1px solid ${color}33`,
+          color, borderRadius: 4,
+          fontSize: "0.48rem", fontWeight: 700, padding: "0.08rem 0.3rem",
+          letterSpacing: "0.04em", textTransform: "uppercase",
+          alignSelf: "flex-start",
+        }}>{route.badge}</span>
+      )}
     </button>
   );
 }
@@ -365,6 +420,7 @@ function RoutingAnimation({
 }: { fromSym: string; toSym: string; scanning: boolean; routes: SorRoute[] }) {
   const [visibleVenues, setVisibleVenues] = useState<number>(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (scanning) {
@@ -373,8 +429,12 @@ function RoutingAnimation({
       timerRef.current = setInterval(() => {
         i++;
         setVisibleVenues(i);
+        // Auto-scroll the carousel as new venues appear
+        if (scrollRef.current) {
+          scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
+        }
         if (i >= VENUES_SCAN.length) clearInterval(timerRef.current!);
-      }, 100);
+      }, 80);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
       setVisibleVenues(VENUES_SCAN.length);
@@ -386,91 +446,174 @@ function RoutingAnimation({
   const tokenOut = TOKENS[toSym];
 
   return (
-    <div style={{ padding: "0.75rem 0", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
 
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
-        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22d3ee", display: "inline-block",
-          animation: scanning ? "pulse-dot 0.9s ease-in-out infinite" : "none" }} />
-        {scanning
-          ? <span className="shimmer-text" style={{ fontSize: "0.72rem", fontWeight: 600 }}>
-              Scanning {VENUES_SCAN.length} venues…
-            </span>
-          : <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "#22d3ee" }}>
-              {routes.length} route{routes.length !== 1 ? "s" : ""} found · best price auto-selected
-            </span>
-        }
+      {/* ── Header ── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.45rem" }}>
+          <span style={{
+            width: 6, height: 6, borderRadius: "50%", background: "#22d3ee",
+            display: "inline-block", flexShrink: 0,
+            animation: scanning ? "pulse-dot 0.9s ease-in-out infinite" : "none",
+          }} />
+          {scanning
+            ? <span className="shimmer-text" style={{ fontSize: "0.7rem", fontWeight: 600 }}>
+                Scanning {VENUES_SCAN.length} venues…
+              </span>
+            : <span style={{ fontSize: "0.7rem", fontWeight: 600, color: "#22d3ee" }}>
+                {routes.length} route{routes.length !== 1 ? "s" : ""} found · best price auto-selected
+              </span>
+          }
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", flexShrink: 0 }}>
+          <span style={{
+            background: tokenIn.color + "18", border: `1px solid ${tokenIn.color}44`,
+            borderRadius: 6, padding: "0.15rem 0.4rem",
+            fontSize: "0.62rem", fontWeight: 700, color: tokenIn.color,
+          }}>{fromSym}</span>
+          <span style={{ color: "#374151", fontSize: "0.6rem" }}>→</span>
+          <span style={{
+            background: tokenOut.color + "18", border: `1px solid ${tokenOut.color}44`,
+            borderRadius: 6, padding: "0.15rem 0.4rem",
+            fontSize: "0.62rem", fontWeight: 700, color: tokenOut.color,
+          }}>{toSym}</span>
+        </div>
       </div>
 
-      {/* Token pair row */}
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-        {/* From token */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.35rem",
-          background: tokenIn.color + "18", border: `1px solid ${tokenIn.color}44`,
-          borderRadius: 8, padding: "0.3rem 0.6rem", fontSize: "0.75rem", fontWeight: 700, color: tokenIn.color }}>
-          <span style={{ width: 16, height: 16, borderRadius: "50%", background: tokenIn.color + "30",
-            display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.55rem", fontWeight: 800 }}>
-            {fromSym[0]}
-          </span>
-          {fromSym}
-        </div>
+      {/* ── Scan tiles: 3 rows × N cols, side-scroll for overflow ── */}
+      <style>{`
+        .venue-scroll::-webkit-scrollbar { display: none; }
+        .route-scroll::-webkit-scrollbar { display: none; }
+      `}</style>
+      <div
+        ref={scrollRef}
+        className="venue-scroll"
+        style={{
+          display: "grid",
+          gridTemplateRows: "repeat(3, auto)",
+          gridAutoFlow: "column",
+          gridAutoColumns: 100,
+          gap: "0.3rem",
+          overflowX: "auto",
+          overflowY: "hidden",
+          scrollbarWidth: "none",
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
+        {/* While scanning: reveal in original order. After scan: sort matched venues best-first */}
+        {(scanning
+          ? VENUES_SCAN.slice(0, visibleVenues)
+          : [...VENUES_SCAN].sort((a, b) => {
+              const ra = routes.findIndex(r => r.venue.includes(a.key));
+              const rb = routes.findIndex(r => r.venue.includes(b.key));
+              if (ra === -1 && rb === -1) return 0;
+              if (ra === -1) return 1;
+              if (rb === -1) return -1;
+              return ra - rb;
+            })
+        ).map((v, i) => {
+          const matchedRoute = routes.find(r => r.venue.includes(v.key));
+          const isBest = !scanning && matchedRoute && routes[0]?.venue === matchedRoute.venue;
 
-        {/* Center — venue lanes */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.22rem", maxHeight: 180, overflowY: "auto" }}>
-          {VENUES_SCAN.slice(0, visibleVenues).map((v, i) => {
-            const matchedRoute = routes.find(r => r.venue.includes(v.key));
-            const isBest = !scanning && matchedRoute && routes[0]?.venue === matchedRoute.venue;
-            return (
-              <div key={v.key} className="scanning-venue" style={{ animationDelay: `${i * 0.05}s` }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                  <span style={{ fontSize: "0.65rem", color: v.color, width: 12, textAlign: "center" }}>{v.icon}</span>
-                  <div className={`flow-line ${v.lineClass}`} style={{ flex: 1 }} />
-                  {!scanning && matchedRoute && (
-                    <span style={{ fontSize: "0.6rem", color: isBest ? "#4ade80" : "#6b7280",
-                      fontWeight: isBest ? 700 : 400, minWidth: 60, textAlign: "right" }}>
-                      {matchedRoute.amountOut} {toSym}
-                    </span>
-                  )}
-                  {scanning && (
-                    <span style={{ fontSize: "0.6rem", color: "#374151", minWidth: 60, textAlign: "right" }}>…</span>
-                  )}
-                </div>
+          return (
+            <div
+              key={v.key}
+              className="scanning-venue"
+              style={{
+                animationDelay: `${i * 0.04}s`,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                gap: "0.5rem",
+                padding: "0.75rem 0.65rem",
+                borderRadius: 10,
+                minHeight: 90,
+                background: isBest ? "#4ade8010" : "#0d0d0d",
+                border: isBest ? "1px solid #4ade8044" : `1px solid ${v.color}28`,
+                transition: "background 0.3s, border 0.3s",
+              }}
+            >
+              {/* Top: icon + label */}
+              <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                <span style={{ fontSize: "1rem", lineHeight: 1, flexShrink: 0 }}>{v.icon}</span>
+                <span style={{
+                  fontSize: "0.6rem", fontWeight: 700, color: v.color,
+                  whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                }}>{v.label}</span>
               </div>
-            );
-          })}
-        </div>
 
-        {/* To token */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.35rem",
-          background: tokenOut.color + "18", border: `1px solid ${tokenOut.color}44`,
-          borderRadius: 8, padding: "0.3rem 0.6rem", fontSize: "0.75rem", fontWeight: 700, color: tokenOut.color }}>
-          <span style={{ width: 16, height: 16, borderRadius: "50%", background: tokenOut.color + "30",
-            display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.55rem", fontWeight: 800 }}>
-            {toSym[0]}
-          </span>
-          {toSym}
-        </div>
+              {/* Middle: animated flow line (loading) or solid bar (done) */}
+              {scanning
+                ? <div className={`flow-line ${v.lineClass}`} style={{ width: "100%", height: 3, borderRadius: 2 }} />
+                : <div style={{
+                    width: "100%", height: 3, borderRadius: 2,
+                    background: matchedRoute ? v.color + "55" : "#1f1f1f",
+                  }} />
+              }
+
+              {/* Bottom: amount or skeleton */}
+              <div>
+                {scanning ? (
+                  <>
+                    {/* Skeleton shimmer blocks */}
+                    <div className="shimmer-text" style={{
+                      height: 10, borderRadius: 4, width: "80%", background: "#1a1a1a", marginBottom: 4,
+                    }} />
+                    <div className="shimmer-text" style={{
+                      height: 8, borderRadius: 4, width: "55%", background: "#141414",
+                    }} />
+                  </>
+                ) : (
+                  <>
+                    <div style={{
+                      fontSize: "0.68rem", fontWeight: isBest ? 800 : 600,
+                      color: isBest ? "#4ade80" : matchedRoute ? "#e5e7eb" : "#374151",
+                      letterSpacing: "-0.01em", lineHeight: 1.3,
+                      wordBreak: "break-all",
+                    }}>
+                      {matchedRoute ? matchedRoute.amountOut : "—"}
+                    </div>
+                    {isBest && (
+                      <span style={{
+                        display: "inline-block", marginTop: "0.2rem",
+                        fontSize: "0.46rem", fontWeight: 800, color: "#4ade80",
+                        background: "#4ade8015", border: "1px solid #4ade8033",
+                        borderRadius: 3, padding: "0.06rem 0.28rem",
+                        letterSpacing: "0.06em", textTransform: "uppercase",
+                      }}>BEST</span>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Best route highlight after scan */}
+      {/* ── Best route bar ── */}
       {!scanning && routes.length > 0 && (
         <div className="route-bar-enter" style={{
-          background: "#22d3ee0a", border: "1px solid #22d3ee33",
-          borderRadius: 8, padding: "0.45rem 0.65rem",
+          background: "#22d3ee08", border: "1px solid #22d3ee2a",
+          borderRadius: 8, padding: "0.4rem 0.65rem",
           display: "flex", justifyContent: "space-between", alignItems: "center",
           fontSize: "0.7rem",
         }}>
-          <span style={{ color: "#22d3ee", fontWeight: 600 }}>
-            Best: {routes[0].venue}
-          </span>
-          <span style={{ color: "#4ade80", fontWeight: 700 }}>
-            {routes[0].amountOut} {toSym}
-          </span>
+          <span style={{ color: "#22d3ee", fontWeight: 600 }}>Best: {routes[0].venue}</span>
+          <span style={{ color: "#4ade80", fontWeight: 700 }}>{routes[0].amountOut} {toSym}</span>
         </div>
       )}
     </div>
   );
 }
+
+// ─── Network routing labels ───────────────────────────────────────────────────
+
+const NETWORK_ROUTER_LABEL: Record<string, string> = {
+  base:      "FluidSOR · Base",
+  ethereum:  "Uniswap V3 · Ethereum",
+  solana:    "Jupiter · Solana",
+  injective: "Helix · Injective",
+};
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
@@ -519,7 +662,7 @@ export default function FluidSwap() {
       .catch(() => {});
   }, []);
 
-  // ── Quote via wallet-endpoints ─────────────────────────────────────────────
+  // ── Quote via /api/sor/wallet-quote (public, all networks) ────────────────
 
   const fetchQuote = useCallback(async () => {
     const n = parseFloat(amount);
@@ -528,9 +671,13 @@ export default function FluidSwap() {
     setScanning(true);
     setQuoteErr(null);
     try {
-      const data = await client.getQuote(fromSym, toSym, amount, network);
+      const BASE_URL_RESOLVED = import.meta.env.DEV ? "" : "https://fluidnative.com";
+      const resp = await fetch(
+        `${BASE_URL_RESOLVED}/api/sor/wallet-quote?tokenIn=${fromSym}&tokenOut=${toSym}&amountIn=${amount}&network=${network}`
+      );
+      const data = await resp.json();
       if (data.error) { setQuoteErr(data.error); setRoutes([]); return; }
-      const sorted = [...(data.routes ?? [])].sort((a, b) => b.amountOutRaw - a.amountOutRaw);
+      const sorted = [...(data.routes ?? [])].sort((a: any, b: any) => b.amountOutRaw - a.amountOutRaw);
       setRoutes(sorted);
       setSelRoute(0);
     } catch (e: any) {
@@ -546,7 +693,7 @@ export default function FluidSwap() {
   useEffect(() => {
     if (step === "routed") return;
     const n = parseFloat(amount);
-    if (n && n > 0 && FLUID_API_KEY) setScanning(true);
+    if (n && n > 0) setScanning(true);
     else setScanning(false);
   }, [amount, fromSym, toSym, step]);
 
@@ -633,15 +780,19 @@ export default function FluidSwap() {
 
   const handleRoute = async () => {
     const n = parseFloat(amount);
-    if (!n || n <= 0 || !FLUID_API_KEY) return;
+    if (!n || n <= 0) return;
     setQuoting(true);
     setScanning(true);
     setQuoteErr(null);
     setSwapError(null);
     try {
-      const data = await client.getQuote(fromSym, toSym, amount, network);
+      const BASE_URL_RESOLVED = import.meta.env.DEV ? "" : "https://fluidnative.com";
+      const resp = await fetch(
+        `${BASE_URL_RESOLVED}/api/sor/wallet-quote?tokenIn=${fromSym}&tokenOut=${toSym}&amountIn=${amount}&network=${network}`
+      );
+      const data = await resp.json();
       if (data.error) { setQuoteErr(data.error); return; }
-      const sorted = [...(data.routes ?? [])].sort((a, b) => b.amountOutRaw - a.amountOutRaw);
+      const sorted = [...(data.routes ?? [])].sort((a: any, b: any) => b.amountOutRaw - a.amountOutRaw);
       setRoutes(sorted);
       setSelRoute(0);
       setStep("routed");
@@ -658,7 +809,7 @@ export default function FluidSwap() {
   const isBusy     = step === "approving" || step === "swapping";
   const bestRoute  = routes[selRoute];
   const isRouted   = step === "routed" && routes.length > 0;
-  const canRoute   = !!FLUID_API_KEY && !!amount && parseFloat(amount) > 0 && !isBusy && !isRouted;
+  const canRoute   = !!amount && parseFloat(amount) > 0 && !isBusy && !isRouted;
   const canExecute = isRouted && hasWallet && IS_DEPLOYED && !isBusy && networkMeta.canSwap;
 
   return (
@@ -683,22 +834,11 @@ export default function FluidSwap() {
         ))}
       </div>
 
-      {/* ── Missing API key ── */}
-      {!FLUID_API_KEY && (
-        <div style={S.warn("#f87171")}>
-          <strong>API key missing.</strong> Add <code>VITE_FLUID_API_KEY=fw_sor_...</code> to{" "}
-          <code>.env.local</code> — get yours at{" "}
-          <a href="https://fluidnative.com" target="_blank" rel="noreferrer" style={{ color: "#67e8f9" }}>
-            fluidnative.com → Developer Console → API Keys
-          </a>
-        </div>
-      )}
-
-      {/* ── Missing private key (soft info, not a warning) ── */}
-      {!hasWallet && FLUID_API_KEY && (
+      {/* ── Missing private key — only relevant for Base execution ── */}
+      {!hasWallet && network === "base" && (
         <div style={{ ...S.warn("#6b7280"), fontSize: "0.74rem" }}>
           <strong style={{ color: "#9ca3af" }}>Quoting active.</strong>{" "}
-          To enable swap execution, add <code>VITE_FLUID_PRIVATE_KEY=0x...</code> to <code>.env.local</code>.
+          To enable swap execution on Base, add <code>VITE_FLUID_PRIVATE_KEY=0x...</code> to <code>.env.local</code>.
         </div>
       )}
 
@@ -788,7 +928,9 @@ export default function FluidSwap() {
             }}
           >{s}%</button>
         ))}
-        <span style={{ marginLeft: "auto", color: "#374151", fontSize: "0.68rem" }}>FluidSOR · Base</span>
+        <span style={{ marginLeft: "auto", color: "#374151", fontSize: "0.68rem" }}>
+          {NETWORK_ROUTER_LABEL[network] ?? "FluidSOR"}
+        </span>
       </div>
 
       {/* ── Routing animation + live routes ── */}
@@ -801,9 +943,24 @@ export default function FluidSwap() {
             routes={routes}
           />
 
-          {/* Detailed route cards (after scan completes) */}
+          {/* Route price cards — best first, 3 rows × N cols, side-scroll */}
           {!quoting && routes.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginTop: "0.5rem" }}>
+            <div
+              className="route-scroll"
+              style={{
+                display: "grid",
+                gridTemplateRows: "repeat(3, auto)",
+                gridAutoFlow: "column",
+                gridAutoColumns: 140,
+                gap: "0.4rem",
+                overflowX: "auto",
+                overflowY: "hidden",
+                scrollbarWidth: "none",
+                WebkitOverflowScrolling: "touch",
+                marginTop: "0.6rem",
+              }}
+            >
+              {/* routes[] is already sorted best-first from server */}
               {routes.map((r, i) => (
                 <RouteCard
                   key={i}
@@ -835,8 +992,7 @@ export default function FluidSwap() {
         >
           {quoting ? "Searching all venues…"
            : !amount ? "Enter an amount to route"
-           : !FLUID_API_KEY ? "Add API key to fetch routes"
-           : "Route via FluidSOR"}
+           : `Route via ${NETWORK_ROUTER_LABEL[network] ?? "FluidSOR"}`}
         </button>
       )}
 

@@ -117,12 +117,13 @@ export class FluidWalletClient {
 
   /**
    * Get the best swap routes from the Fluid Smart Order Router.
-   * @param {string} tokenIn   e.g. "USDC"
-   * @param {string} tokenOut  e.g. "WETH"
+   * @param {string} tokenIn   e.g. "SOL", "USDC", "WETH"
+   * @param {string} tokenOut  e.g. "USDC", "USDT", "WETH"
    * @param {string} amountIn  e.g. "100"
+   * @param {"base"|"ethereum"|"solana"|"injective"} network  default: "base"
    */
   async getQuote(tokenIn, tokenOut, amountIn, network = "base") {
-    const url = `${this.baseUrl}/api/sor/quote?tokenIn=${tokenIn}&tokenOut=${tokenOut}&amountIn=${amountIn}&network=${network}`;
+    const url = `${this.baseUrl}/api/sor/wallet-quote?tokenIn=${tokenIn}&tokenOut=${tokenOut}&amountIn=${amountIn}&network=${network}`;
     const res = await fetch(url, { headers: this._authHeader });
     return res.json();
   }

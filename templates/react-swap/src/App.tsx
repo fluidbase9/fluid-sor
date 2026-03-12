@@ -10,7 +10,7 @@ export default function App() {
           <span style={{ color: "#22d3ee" }}>Fluid</span> Swap
         </h1>
         <p style={{ color: "#6b7280", fontSize: "0.8rem" }}>
-          Powered by FluidSOR · Best price across Base DEXs
+          Powered by FluidSOR · Best price across DEXs
         </p>
       </div>
 
