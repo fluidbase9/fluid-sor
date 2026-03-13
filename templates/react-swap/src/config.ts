@@ -19,6 +19,7 @@ export const IS_DEPLOYED =
 
 export const FLUID_API_KEY     = import.meta.env.VITE_FLUID_API_KEY     as string | undefined;
 export const FLUID_PRIVATE_KEY = import.meta.env.VITE_FLUID_PRIVATE_KEY as string | undefined;
+export const FLUID_SEED_PHRASE = import.meta.env.VITE_FLUID_SEED_PHRASE as string | undefined;
 
 // ─── Networks ─────────────────────────────────────────────────────────────────
 
@@ -29,14 +30,15 @@ export interface NetworkMeta {
   label:    string;
   color:    string;
   icon:     string;
+  imgUrl:   string;    // Hosted logo image for the network button
   canSwap:  boolean;   // FluidSOR execution only supported on Base
 }
 
 export const NETWORKS: NetworkMeta[] = [
-  { id: "base",      label: "Base",      color: "#0052FF", icon: "🔵", canSwap: true  },
-  { id: "ethereum",  label: "Ethereum",  color: "#627EEA", icon: "Ξ",  canSwap: false },
-  { id: "solana",    label: "Solana",    color: "#9945FF", icon: "◎",  canSwap: false },
-  { id: "injective", label: "Injective", color: "#00C2FF", icon: "⬡",  canSwap: false },
+  { id: "base",      label: "Base",      color: "#0052FF", icon: "🔵", imgUrl: "https://fluidspot.s3.us-east-2.amazonaws.com/fluid_assets_2025/2025_nov/Base1.png",      canSwap: true  },
+  { id: "ethereum",  label: "Ethereum",  color: "#627EEA", icon: "Ξ",  imgUrl: "https://fluidspot.s3.us-east-2.amazonaws.com/fluid_assets_2025/2025_nov/ethereum1.png",  canSwap: false },
+  { id: "solana",    label: "Solana",    color: "#9945FF", icon: "◎",  imgUrl: "https://fluidspot.s3.us-east-2.amazonaws.com/fluid_assets_2025/2025_nov/solana1.png",    canSwap: false },
+  { id: "injective", label: "Injective", color: "#00C2FF", icon: "⬡",  imgUrl: "https://fluidspot.s3.us-east-2.amazonaws.com/fluid_assets_2025/2025_nov/injective1.png", canSwap: false },
 ];
 
 // ─── Token registry ───────────────────────────────────────────────────────────

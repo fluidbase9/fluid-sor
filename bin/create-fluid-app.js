@@ -119,6 +119,35 @@ async function promptApiKey() {
   }
 }
 
+// ─── Interactive seed phrase prompt ───────────────────────────────────────────
+
+async function promptSeedPhrase() {
+  log("");
+  log(`  ${C.bold}Fluid Account Seed Phrase${C.reset}`);
+  log(`  ${C.gray}Your 12 or 24-word BIP-39 mnemonic — the master key for your Fluid wallet.${C.reset}`);
+  log(`  ${C.gray}Used to derive your wallet address and sign transactions server-side.${C.reset}`);
+  log(`  ${C.yellow}!${C.reset}  ${C.gray}Never share this with anyone. It is written only to ${C.cyan}.env.local${C.gray} (git-ignored).${C.reset}`);
+  log("");
+
+  while (true) {
+    const phrase = await prompt(
+      `  ${C.cyan}?${C.reset} Paste seed phrase ${C.dim}(12 or 24 words)${C.reset}: `
+    );
+    if (!phrase.trim()) {
+      err("Seed phrase is required to set up your Fluid wallet. Cannot proceed without it.");
+      continue;
+    }
+    const words = phrase.trim().split(/\s+/);
+    if (words.length !== 12 && words.length !== 24) {
+      err(`Expected 12 or 24 words — got ${words.length}. Check your phrase and try again.`);
+      continue;
+    }
+    const preview = `${words[0]} ${words[1]} ${words[2]} … ${words[words.length - 1]}`;
+    ok(`Seed phrase accepted  ${C.dim}(${words.length} words: ${preview})${C.reset}`);
+    return phrase.trim();
+  }
+}
+
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
@@ -128,7 +157,7 @@ async function main() {
   const projectName = getProjectName();
   const projectPath = path.resolve(process.cwd(), projectName);
   const templateDir = path.resolve(__dirname, "../templates/react-swap");
-  const TOTAL_STEPS = 4;
+  const TOTAL_STEPS = 5;
 
   if (fs.existsSync(projectPath)) {
     err(`Directory ${C.cyan}${projectName}${C.reset} already exists.`);
@@ -145,14 +174,18 @@ async function main() {
   step(1, TOTAL_STEPS, "Fluid API key setup");
   const apiKey = await promptApiKey();
 
-  // ── Step 2: Scaffold ───────────────────────────────────────────────────────
-  step(2, TOTAL_STEPS, `Scaffolding ${C.cyan}${projectName}${C.reset}…`);
+  // ── Step 2: Seed phrase ────────────────────────────────────────────────────
+  step(2, TOTAL_STEPS, "Fluid account seed phrase");
+  const seedPhrase = await promptSeedPhrase();
+
+  // ── Step 3: Scaffold ───────────────────────────────────────────────────────
+  step(3, TOTAL_STEPS, `Scaffolding ${C.cyan}${projectName}${C.reset}…`);
   copyDir(templateDir, projectPath);
   patchPackageJson(projectPath, projectName);
   ok(`Copied template → ${C.gray}./${projectName}${C.reset}`);
 
-  // ── Step 3: Install deps ───────────────────────────────────────────────────
-  step(3, TOTAL_STEPS, "Installing dependencies…");
+  // ── Step 4: Install deps ───────────────────────────────────────────────────
+  step(4, TOTAL_STEPS, "Installing dependencies…");
   const pm = detectPm();
   try {
     execSync(`${pm} install`, { cwd: projectPath, stdio: "pipe" });
@@ -162,17 +195,17 @@ async function main() {
     info("  →", `cd ${projectName} && npm install`);
   }
 
-  // ── Step 4: Write .env.local ───────────────────────────────────────────────
-  step(4, TOTAL_STEPS, "Writing .env.local…");
-
-  const apiKeyLine = apiKey
-    ? `VITE_FLUID_API_KEY=${apiKey}`
-    : `VITE_FLUID_API_KEY=          # paste your fw_sor_... key here`;
+  // ── Step 5: Write .env.local ───────────────────────────────────────────────
+  step(5, TOTAL_STEPS, "Writing .env.local…");
 
   const envContent = [
     "# ─── Fluid SDK API key (REQUIRED) ───────────────────────────────────────────",
     "# Derive yours: fluidnative.com → Developer Console → API Keys tab",
-    apiKeyLine,
+    `VITE_FLUID_API_KEY=${apiKey}`,
+    "",
+    "# ─── Fluid account seed phrase (REQUIRED) ───────────────────────────────────",
+    "# Your 12 or 24-word BIP-39 mnemonic — derives your wallet addresses",
+    `VITE_FLUID_SEED_PHRASE=${seedPhrase}`,
     "",
     "# ─── FluidSOR contract (pre-filled — live on Base mainnet) ──────────────────",
     "VITE_FLUID_SOR_ADDRESS=0xF24daF8Fe15383fb438d48811E8c4b43749DafAE",
@@ -184,8 +217,7 @@ async function main() {
   const gitignore = ["node_modules", ".env.local", "dist", ".DS_Store"].join("\n");
   fs.writeFileSync(path.join(projectPath, ".gitignore"), gitignore + "\n");
 
-  if (apiKey) ok(`API key written to ${C.gray}.env.local${C.reset}`);
-  else        warn(`API key missing — open ${C.gray}.env.local${C.reset} and add ${C.cyan}VITE_FLUID_API_KEY${C.reset}`);
+  ok(`API key + seed phrase written to ${C.gray}.env.local${C.reset}`);
 
   // ── Done ───────────────────────────────────────────────────────────────────
   log("");
@@ -194,12 +226,7 @@ async function main() {
   log(`  ${C.bold}Next steps:${C.reset}`);
   info("1.", `cd ${C.cyan}${projectName}${C.reset}`);
 
-  let stepN = 2;
-  if (!apiKey) {
-    info(`${stepN++}.`, `${C.yellow}[Required]${C.reset} Add ${C.cyan}VITE_FLUID_API_KEY=fw_sor_...${C.reset} to ${C.gray}.env.local${C.reset}`);
-    info("   ", `Get it: ${C.cyan}fluidnative.com${C.reset} → Developer Console → API Keys`);
-  }
-  info(`${stepN}.`, `${C.cyan}npm run dev${C.reset}  — opens at http://localhost:5173`);
+  info("2.", `${C.cyan}npm run dev${C.reset}  — opens at http://localhost:5173`);
 
   log("");
   log(`  ${C.bold}What's inside:${C.reset}`);

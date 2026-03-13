@@ -5,12 +5,32 @@ export default function App() {
   return (
     <div style={{ width: "100%", maxWidth: 480 }}>
       {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 800, letterSpacing: "-0.02em", marginBottom: "0.25rem" }}>
-          <span style={{ color: "#22d3ee" }}>Fluid</span> Swap
-        </h1>
-        <p style={{ color: "#6b7280", fontSize: "0.8rem" }}>
-          Powered by FluidSOR · Best price across DEXs
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "0.5rem", marginBottom: "2rem" }}>
+        {/* Logo + title */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.75rem" }}>
+          <img
+            src="https://fluidspot.s3.us-east-2.amazonaws.com/web/Base/media_files/fluid23.png"
+            alt="Fluid"
+            style={{ width: 48, height: 48, borderRadius: 10, objectFit: "contain", flexShrink: 0 }}
+            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+          />
+          <h1 style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, fontSize: "2.25rem", lineHeight: 1.1, color: "#fff", margin: 0 }}>
+            Smart Order Routing
+          </h1>
+        </div>
+        {/* Subheading */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem", fontFamily: "'Inter', sans-serif", fontWeight: 600, fontStyle: "italic", fontSize: "0.9rem", color: "#cbd5e1", letterSpacing: "0.04em" }}>
+          <span>Powered by</span>
+          <img
+            src="https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/fluid_intelliegence.png"
+            alt="Fluid Intelligence"
+            style={{ width: 18, height: 18, borderRadius: 4, objectFit: "cover" }}
+            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+          />
+          <span>Fluid Intelligence</span>
+        </div>
+        <p style={{ fontFamily: "'Inter', sans-serif", fontWeight: 400, fontStyle: "italic", fontSize: "0.8rem", color: "#94a3b8", margin: 0 }}>
+          Best prices · Minimal slippage · 25+ DEX venues across 4 networks
         </p>
       </div>
 

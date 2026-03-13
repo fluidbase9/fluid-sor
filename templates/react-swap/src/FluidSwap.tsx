@@ -22,6 +22,7 @@ import {
   BASESCAN,
   FLUID_API_KEY,
   FLUID_PRIVATE_KEY,
+  FLUID_SEED_PHRASE,
   CHAIN,
   BASE_RPC_URL,
   type Token,
@@ -115,38 +116,38 @@ const FLUID_SOR_ABI = [
 
 // ─── Venue display config ─────────────────────────────────────────────────────
 
-const VENUE_META: Record<string, { color: string; icon: string }> = {
-  "Fluid AMM":    { color: "#22d3ee", icon: "◈"  },
-  "Uniswap V3":   { color: "#ff007a", icon: "🦄" },
-  "Aerodrome":    { color: "#3b82f6", icon: "✈"  },
-  "Split":        { color: "#a78bfa", icon: "⑂"  },
-  "Curve":        { color: "#f59e0b", icon: "⟳"  },
-  "Balancer":     { color: "#7c3aed", icon: "⬡"  },
-  "PancakeSwap":  { color: "#d97706", icon: "🥞" },
-  "SushiSwap":    { color: "#e11d48", icon: "🍣" },
-  "Velodrome":    { color: "#6366f1", icon: "⚡" },
-  "DODO":         { color: "#facc15", icon: "🦤" },
-  "KyberSwap":    { color: "#31c48d", icon: "🔷" },
-  "1inch":        { color: "#1d4ed8", icon: "🔵" },
-  "Frax":         { color: "#9ca3af", icon: "𝔽"  },
-  "Convex":       { color: "#f97316", icon: "🔺" },
-  "Bancor":       { color: "#12b886", icon: "◉"  },
-  "Trader Joe":   { color: "#ef4444", icon: "🎰" },
-  "GMX":          { color: "#06b6d4", icon: "◆"  },
-  "Camelot":      { color: "#a16207", icon: "♞"  },
-  "Platypus":     { color: "#2dd4bf", icon: "🦆" },
-  "WOOFi":        { color: "#8b5cf6", icon: "🐕" },
-  "Hashflow":     { color: "#0ea5e9", icon: "⌗"  },
-  "Maverick":     { color: "#ec4899", icon: "◀"  },
-  "Ambient":      { color: "#10b981", icon: "〰" },
-  "Clipper":      { color: "#f472b6", icon: "✂"  },
-  "Odos":         { color: "#6366f1", icon: "⊕"  },
-  "OpenOcean":    { color: "#38bdf8", icon: "🌊" },
+const VENUE_META: Record<string, { color: string; icon: string; logo?: string }> = {
+  "Fluid AMM":   { color: "#22d3ee", icon: "◈"  },
+  "Uniswap V3":  { color: "#ff007a", icon: "🦄", logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/Uniswap1.jpg" },
+  "Aerodrome":   { color: "#3b82f6", icon: "✈",  logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/AnNwWdzS_400x400.jpg" },
+  "Split":       { color: "#a78bfa", icon: "⑂"  },
+  "Curve":       { color: "#f59e0b", icon: "⟳",  logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/curve-dao-token-crv-logo.png" },
+  "Balancer":    { color: "#7c3aed", icon: "⬡",  logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/balancer.png" },
+  "PancakeSwap": { color: "#d97706", icon: "🥞", logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/pancakeswap.png" },
+  "SushiSwap":   { color: "#e11d48", icon: "🍣", logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/sushiswap.jpg" },
+  "Velodrome":   { color: "#6366f1", icon: "⚡", logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/velodrome.png" },
+  "DODO":        { color: "#facc15", icon: "🦤", logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/DODO.jpg" },
+  "KyberSwap":   { color: "#31c48d", icon: "🔷", logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/kyber.jpg" },
+  "1inch":       { color: "#1d4ed8", icon: "🔵", logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/1inch-1inch-logo.png" },
+  "Frax":        { color: "#9ca3af", icon: "𝔽"  },
+  "Convex":      { color: "#f97316", icon: "🔺" },
+  "Bancor":      { color: "#12b886", icon: "◉",  logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/bancor-bnt-logo.png" },
+  "Trader Joe":  { color: "#ef4444", icon: "🎰", logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/Trader_joe.png" },
+  "GMX":         { color: "#06b6d4", icon: "◆",  logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/GMX-logo-1.png" },
+  "Camelot":     { color: "#a16207", icon: "♞"  },
+  "Platypus":    { color: "#2dd4bf", icon: "🦆" },
+  "WOOFi":       { color: "#8b5cf6", icon: "🐕", logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/woofi.png" },
+  "Hashflow":    { color: "#0ea5e9", icon: "⌗",  logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/hashflow.png" },
+  "Maverick":    { color: "#ec4899", icon: "◀",  logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/Maverick.png" },
+  "Ambient":     { color: "#10b981", icon: "〰", logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/ambient.png" },
+  "Clipper":     { color: "#f472b6", icon: "✂",  logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/clipper.png" },
+  "Odos":        { color: "#6366f1", icon: "⊕",  logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/odos.png" },
+  "OpenOcean":   { color: "#38bdf8", icon: "🌊", logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/open_ocean.jpg" },
 };
 
 function venueColor(venue: string) {
   const key = Object.keys(VENUE_META).find((k) => venue.includes(k)) ?? "Split";
-  return VENUE_META[key] ?? { color: "#6b7280", icon: "◈" };
+  return VENUE_META[key] ?? { color: "#6b7280", icon: "◈", logo: undefined };
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
@@ -293,7 +294,7 @@ function TokenSelect({
 function RouteCard({
   route, toSym, selected, onClick, rank,
 }: { route: SorRoute; toSym: string; selected: boolean; onClick: () => void; rank: number }) {
-  const { color, icon } = venueColor(route.venue);
+  const { color, icon, logo } = venueColor(route.venue);
   const isBest = rank === 0;
   const rankLabels = ["BEST", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th", "11th", "12th"];
   const rankLabel  = rankLabels[rank] ?? `${rank + 1}th`;
@@ -344,7 +345,11 @@ function RouteCard({
 
       {/* Icon + name row */}
       <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-        <span style={{ fontSize: "0.85rem", lineHeight: 1 }}>{icon}</span>
+        {logo ? (
+          <img src={logo} alt={shortName} style={{ width: 16, height: 16, borderRadius: 4, objectFit: "cover", flexShrink: 0 }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+        ) : (
+          <span style={{ fontSize: "0.85rem", lineHeight: 1 }}>{icon}</span>
+        )}
         <span style={{
           fontSize: "0.62rem", fontWeight: 700, color: color,
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
@@ -388,31 +393,31 @@ function RouteCard({
 // ─── Routing animation ────────────────────────────────────────────────────────
 
 const VENUES_SCAN = [
-  { key: "Fluid",       label: "Fluid AMM",    color: "#22d3ee", icon: "◈",  lineClass: "cyan"   },
-  { key: "Uniswap",     label: "Uniswap V3",   color: "#ff007a", icon: "🦄", lineClass: "pink"   },
-  { key: "Aerodrome",   label: "Aerodrome",    color: "#3b82f6", icon: "✈",  lineClass: "blue"   },
-  { key: "Curve",       label: "Curve",        color: "#f59e0b", icon: "⟳",  lineClass: "cyan"   },
-  { key: "Balancer",    label: "Balancer",     color: "#7c3aed", icon: "⬡",  lineClass: "purple" },
-  { key: "PancakeSwap", label: "PancakeSwap",  color: "#d97706", icon: "🥞", lineClass: "pink"   },
-  { key: "SushiSwap",   label: "SushiSwap",    color: "#e11d48", icon: "🍣", lineClass: "pink"   },
-  { key: "Velodrome",   label: "Velodrome",    color: "#6366f1", icon: "⚡", lineClass: "purple" },
-  { key: "DODO",        label: "DODO",         color: "#facc15", icon: "🦤", lineClass: "cyan"   },
-  { key: "KyberSwap",   label: "KyberSwap",    color: "#31c48d", icon: "🔷", lineClass: "blue"   },
-  { key: "1inch",       label: "1inch",        color: "#1d4ed8", icon: "🔵", lineClass: "blue"   },
-  { key: "Frax",        label: "Frax",         color: "#9ca3af", icon: "𝔽",  lineClass: "cyan"   },
-  { key: "Convex",      label: "Convex",       color: "#f97316", icon: "🔺", lineClass: "pink"   },
-  { key: "Bancor",      label: "Bancor",       color: "#12b886", icon: "◉",  lineClass: "blue"   },
-  { key: "Trader Joe",  label: "Trader Joe",   color: "#ef4444", icon: "🎰", lineClass: "pink"   },
-  { key: "GMX",         label: "GMX",          color: "#06b6d4", icon: "◆",  lineClass: "cyan"   },
-  { key: "Camelot",     label: "Camelot",      color: "#a16207", icon: "♞",  lineClass: "pink"   },
-  { key: "Platypus",    label: "Platypus",     color: "#2dd4bf", icon: "🦆", lineClass: "blue"   },
-  { key: "WOOFi",       label: "WOOFi",        color: "#8b5cf6", icon: "🐕", lineClass: "purple" },
-  { key: "Hashflow",    label: "Hashflow",     color: "#0ea5e9", icon: "⌗",  lineClass: "blue"   },
-  { key: "Maverick",    label: "Maverick",     color: "#ec4899", icon: "◀",  lineClass: "pink"   },
-  { key: "Ambient",     label: "Ambient",      color: "#10b981", icon: "〰", lineClass: "blue"   },
-  { key: "Clipper",     label: "Clipper",      color: "#f472b6", icon: "✂",  lineClass: "pink"   },
-  { key: "Odos",        label: "Odos",         color: "#6366f1", icon: "⊕",  lineClass: "purple" },
-  { key: "OpenOcean",   label: "OpenOcean",    color: "#38bdf8", icon: "🌊", lineClass: "cyan"   },
+  { key: "Fluid",       label: "Fluid AMM",   color: "#22d3ee", icon: "◈",  lineClass: "cyan"   },
+  { key: "Uniswap",     label: "Uniswap V3",  color: "#ff007a", icon: "🦄", lineClass: "pink",   logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/Uniswap1.jpg" },
+  { key: "Aerodrome",   label: "Aerodrome",   color: "#3b82f6", icon: "✈",  lineClass: "blue",   logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/AnNwWdzS_400x400.jpg" },
+  { key: "Curve",       label: "Curve",       color: "#f59e0b", icon: "⟳",  lineClass: "cyan",   logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/curve-dao-token-crv-logo.png" },
+  { key: "Balancer",    label: "Balancer",    color: "#7c3aed", icon: "⬡",  lineClass: "purple", logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/balancer.png" },
+  { key: "PancakeSwap", label: "PancakeSwap", color: "#d97706", icon: "🥞", lineClass: "pink",   logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/pancakeswap.png" },
+  { key: "SushiSwap",   label: "SushiSwap",   color: "#e11d48", icon: "🍣", lineClass: "pink",   logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/sushiswap.jpg" },
+  { key: "Velodrome",   label: "Velodrome",   color: "#6366f1", icon: "⚡", lineClass: "purple", logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/velodrome.png" },
+  { key: "Odos",        label: "Odos",        color: "#6366f1", icon: "⊕",  lineClass: "purple", logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/odos.png" },
+  { key: "OpenOcean",   label: "OpenOcean",   color: "#38bdf8", icon: "🌊", lineClass: "cyan",   logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/open_ocean.jpg" },
+  { key: "KyberSwap",   label: "KyberSwap",   color: "#31c48d", icon: "🔷", lineClass: "blue",   logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/kyber.jpg" },
+  { key: "DODO",        label: "DODO",        color: "#facc15", icon: "🦤", lineClass: "cyan",   logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/DODO.jpg" },
+  { key: "1inch",       label: "1inch",       color: "#1d4ed8", icon: "🔵", lineClass: "blue",   logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/1inch-1inch-logo.png" },
+  { key: "Bancor",      label: "Bancor",      color: "#12b886", icon: "◉",  lineClass: "blue",   logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/bancor-bnt-logo.png" },
+  { key: "Trader Joe",  label: "Trader Joe",  color: "#ef4444", icon: "🎰", lineClass: "pink",   logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/Trader_joe.png" },
+  { key: "GMX",         label: "GMX",         color: "#06b6d4", icon: "◆",  lineClass: "cyan",   logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/GMX-logo-1.png" },
+  { key: "WOOFi",       label: "WOOFi",       color: "#8b5cf6", icon: "🐕", lineClass: "purple", logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/woofi.png" },
+  { key: "Hashflow",    label: "Hashflow",    color: "#0ea5e9", icon: "⌗",  lineClass: "blue",   logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/hashflow.png" },
+  { key: "Maverick",    label: "Maverick",    color: "#ec4899", icon: "◀",  lineClass: "pink",   logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/Maverick.png" },
+  { key: "Ambient",     label: "Ambient",     color: "#10b981", icon: "〰", lineClass: "blue",   logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/ambient.png" },
+  { key: "Clipper",     label: "Clipper",     color: "#f472b6", icon: "✂",  lineClass: "pink",   logo: "https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/clipper.png" },
+  { key: "Frax",        label: "Frax",        color: "#9ca3af", icon: "𝔽",  lineClass: "cyan"   },
+  { key: "Convex",      label: "Convex",      color: "#f97316", icon: "🔺", lineClass: "pink"   },
+  { key: "Camelot",     label: "Camelot",     color: "#a16207", icon: "♞",  lineClass: "pink"   },
+  { key: "Platypus",    label: "Platypus",    color: "#2dd4bf", icon: "🦆", lineClass: "blue"   },
 ];
 
 function RoutingAnimation({
@@ -533,9 +538,13 @@ function RoutingAnimation({
                 transition: "background 0.3s, border 0.3s",
               }}
             >
-              {/* Top: icon + label */}
+              {/* Top: logo/icon + label */}
               <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                <span style={{ fontSize: "1rem", lineHeight: 1, flexShrink: 0 }}>{v.icon}</span>
+                {(v as any).logo ? (
+                  <img src={(v as any).logo} alt={v.label} style={{ width: 16, height: 16, borderRadius: 4, objectFit: "cover", flexShrink: 0 }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                ) : (
+                  <span style={{ fontSize: "1rem", lineHeight: 1, flexShrink: 0 }}>{v.icon}</span>
+                )}
                 <span style={{
                   fontSize: "0.6rem", fontWeight: 700, color: v.color,
                   whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
@@ -829,7 +838,8 @@ export default function FluidSwap() {
               cursor: "pointer", transition: "all 0.15s", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.3rem",
             }}
           >
-            <span>{net.icon}</span> {net.label}
+            <img src={net.imgUrl} alt={net.label} style={{ width: 14, height: 14, borderRadius: 3, objectFit: "cover", flexShrink: 0 }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+            {net.label}
           </button>
         ))}
       </div>
