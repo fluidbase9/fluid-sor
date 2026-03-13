@@ -13,12 +13,15 @@ import {
 import { base } from "viem/chains";
 import { FLUID_API_KEY, FLUID_PRIVATE_KEY, FLUID_SOR_ADDRESS, BASE_RPC_URL } from "./config";
 
-// ─── Wallet derived from VITE_FLUID_PRIVATE_KEY ───────────────────────────────
+// ─── Wallet derived from VITE_FLUID_PRIVATE_KEY (used for signing txns) ──────
 
 const _account = (() => {
   if (!FLUID_PRIVATE_KEY?.startsWith("0x") || FLUID_PRIVATE_KEY.length !== 66) return null;
   try { return privateKeyToAccount(FLUID_PRIVATE_KEY as `0x${string}`); } catch { return null; }
 })();
+// evmAddress is the signer address — used for signing transactions.
+// The UI display address is fetched from the server using the API key,
+// so it always shows the correct registered address regardless of local key.
 const evmAddress: string | null = _account?.address ?? null;
 
 const _walletClient = _account
@@ -639,46 +642,53 @@ export default function FluidSwap() {
     injective: "https://explorer.injective.network/account/",
   };
 
-  // Fetch Fluid ID once on login
+  // ─── Fetch registered addresses from server using API key ────────────────────
+  // This ensures FROM/TO always shows the address registered at developer sign-up,
+  // regardless of which private key is in VITE_FLUID_PRIVATE_KEY.
+  const [registeredAddrs, setRegisteredAddrs] = useState<{ base: string | null; ethereum: string | null; solana: string | null; injective: string | null }>({ base: null, ethereum: null, solana: null, injective: null });
+
   useEffect(() => {
-    if (!evmAddress) { setFluidId(null); return; }
-    fetch(`${BASE_URL}/api/fw-names/by-address/${evmAddress}`)
+    if (!FLUID_API_KEY) return;
+    fetch(`${BASE_URL}/api/v1/wallet/info`, { headers: { "x-fluid-api-key": FLUID_API_KEY } })
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && d.addresses) {
+          setRegisteredAddrs({ base: d.addresses.base, ethereum: d.addresses.ethereum, solana: d.addresses.solana, injective: null });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Derive the display address for the current network from registered addresses (or local evmAddress as fallback)
+  const displayAddress = (net: Network): string | null => {
+    if (net === "base")      return registeredAddrs.base      ?? evmAddress;
+    if (net === "ethereum")  return registeredAddrs.ethereum  ?? evmAddress;
+    if (net === "solana")    return registeredAddrs.solana    ?? null;
+    if (net === "injective") return registeredAddrs.injective ?? null;
+    return null;
+  };
+
+  // Fetch Fluid ID once we know the registered base address
+  useEffect(() => {
+    const addr = registeredAddrs.base ?? evmAddress;
+    if (!addr) { setFluidId(null); return; }
+    fetch(`${BASE_URL}/api/fw-names/by-address/${addr}`)
       .then(r => r.json())
       .then(d => { if (d.fwCore) setFluidId(d.fwCore); })
       .catch(() => {});
-  }, [evmAddress]);
+  }, [registeredAddrs.base, evmAddress]);
 
-  // Fetch chain-specific address when from-network changes
+  // Sync chainAddress with from-network
   useEffect(() => {
-    if (!evmAddress) { setChainAddress(null); return; }
-    if (network === "base" || network === "ethereum") {
-      setChainAddress(evmAddress);
-      return;
-    }
-    setChainAddrLoading(true);
-    const endpoint = network === "solana" ? `${BASE_URL}/api/solana/derive-address` : `${BASE_URL}/api/injective/derive-address`;
-    fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ apiKey: FLUID_API_KEY }) })
-      .then(r => r.json())
-      .then(d => setChainAddress(d.address ?? null))
-      .catch(() => setChainAddress(null))
-      .finally(() => setChainAddrLoading(false));
-  }, [network, evmAddress]);
+    const addr = displayAddress(network);
+    setChainAddress(addr);
+  }, [network, registeredAddrs, evmAddress]);
 
-  // Fetch chain-specific address when to-network changes
+  // Sync toChainAddress with to-network
   useEffect(() => {
-    if (!evmAddress) { setToChainAddress(null); return; }
-    if (toNetwork === "base" || toNetwork === "ethereum") {
-      setToChainAddress(evmAddress);
-      return;
-    }
-    setToChainAddrLoading(true);
-    const endpoint = toNetwork === "solana" ? `${BASE_URL}/api/solana/derive-address` : `${BASE_URL}/api/injective/derive-address`;
-    fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ apiKey: FLUID_API_KEY }) })
-      .then(r => r.json())
-      .then(d => setToChainAddress(d.address ?? null))
-      .catch(() => setToChainAddress(null))
-      .finally(() => setToChainAddrLoading(false));
-  }, [toNetwork, evmAddress]);
+    const addr = displayAddress(toNetwork);
+    setToChainAddress(addr);
+  }, [toNetwork, registeredAddrs, evmAddress]);
 
   // Fetch swap history
   const fetchSwapHistory = useCallback(async () => {
