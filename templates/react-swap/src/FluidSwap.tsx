@@ -633,7 +633,8 @@ export default function FluidSwap() {
       .then(d => {
         if (d.success && d.addresses) {
           setRegisteredAddrs({ base: d.addresses.base, ethereum: d.addresses.ethereum, solana: d.addresses.solana, injective: null });
-          if (d.email) setRegisteredEmail(d.email);
+          if (d.email)   setRegisteredEmail(d.email);
+          if (d.fluidId) setFluidId(d.fluidId);
         }
       })
       .catch(() => {});
