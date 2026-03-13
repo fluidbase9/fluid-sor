@@ -49,6 +49,23 @@ export interface SorQuoteResponse {
   error?:    string;
 }
 
+export interface WalletInfoResponse {
+  success:    boolean;
+  email?:     string | null;
+  fluidId?:   string | null;
+  addresses?: { ethereum: string | null; base: string | null; solana: string | null };
+  error?:     string;
+}
+
+export interface UsageStatsResponse {
+  success:    boolean;
+  totalCalls: number;
+  callsToday: number;
+  daily:      { day: string; count: number }[];
+  endpoints:  { endpoint: string; count: number }[];
+  error?:     string;
+}
+
 export interface BalanceResponse {
   success: boolean;
   balance: string;
@@ -92,6 +109,8 @@ export class FluidWalletClient {
   registerKey(email: string, keyHash: string, keyHint: string, ethAddress?: string, baseAddress?: string, solAddress?: string): Promise<RegisterKeyResponse>;
   getKeyInfo(email: string): Promise<KeyInfoResponse>;
   deactivateKey(email: string): Promise<{ success: boolean; error?: string }>;
+  getWalletInfo(): Promise<WalletInfoResponse>;
+  getUsageStats(email: string): Promise<UsageStatsResponse>;
   getBalance(chain?: "base" | "ethereum" | "solana"): Promise<BalanceResponse>;
   send(params: { chain: "base" | "ethereum" | "solana"; to: string; amount: string; signedTx: string }): Promise<SendResponse>;
   getQuote(tokenIn: string, tokenOut: string, amountIn: string, network?: "base" | "ethereum" | "solana" | "injective"): Promise<SorQuoteResponse>;

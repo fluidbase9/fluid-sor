@@ -81,6 +81,27 @@ export interface SorQuoteResponse {
   error?:     string;
 }
 
+export interface WalletInfoResponse {
+  success:   boolean;
+  email?:    string | null;
+  fluidId?:  string | null;   // e.g. "alice.fluidbase.eth"
+  addresses?: {
+    ethereum: string | null;
+    base:     string | null;
+    solana:   string | null;
+  };
+  error?: string;
+}
+
+export interface UsageStatsResponse {
+  success:    boolean;
+  totalCalls: number;
+  callsToday: number;
+  daily:      { day: string; count: number }[];    // YYYY-MM-DD, last 7 days
+  endpoints:  { endpoint: string; count: number }[]; // top endpoints by volume
+  error?: string;
+}
+
 export interface BalanceResponse {
   success:  boolean;
   balance:  string;   // USDC balance as a decimal string e.g. "42.50"
@@ -211,6 +232,49 @@ export class FluidWalletClient {
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify({ email }),
     });
+    return res.json();
+  }
+
+  // ── Wallet info ───────────────────────────────────────────────────────────
+
+  /**
+   * Get your registered wallet addresses, Fluid ID, and email for your API key.
+   *
+   * Returns the server-registered addresses for your developer account.
+   * Useful to display the correct address (Base, Ethereum, Solana) in your UI.
+   *
+   * @example
+   * const info = await client.getWalletInfo();
+   * console.log(info.fluidId);          // "alice.fluidbase.eth"
+   * console.log(info.addresses?.base);  // "0xD858..."
+   */
+  async getWalletInfo(): Promise<WalletInfoResponse> {
+    const res = await fetch(
+      `${this.baseUrl}/api/v1/wallet/info`,
+      { headers: this.authHeader }
+    );
+    return res.json();
+  }
+
+  // ── Usage stats ───────────────────────────────────────────────────────────
+
+  /**
+   * Get API usage statistics for your API key.
+   *
+   * Returns total calls, calls today, a 7-day daily breakdown,
+   * and a per-endpoint call count breakdown.
+   *
+   * @param email  Your registered developer email
+   *
+   * @example
+   * const stats = await client.getUsageStats("you@example.com");
+   * console.log(`Total API calls: ${stats.totalCalls}`);
+   * console.log(`Calls today:     ${stats.callsToday}`);
+   */
+  async getUsageStats(email: string): Promise<UsageStatsResponse> {
+    const res = await fetch(
+      `${this.baseUrl}/api/developer/usage?email=${encodeURIComponent(email)}`
+    );
     return res.json();
   }
 

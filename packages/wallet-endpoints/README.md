@@ -114,7 +114,12 @@ await walletClient.writeContract({
 | `registerKey(email, keyHash, keyHint, eth?, base?, sol?)` | Register SDK key + wallet addresses |
 | `getKeyInfo(email)` | Get key status and registered wallet addresses |
 | `deactivateKey(email)` | Revoke the API key |
-| `getQuote(tokenIn, tokenOut, amountIn)` | Get best SOR routes (requires API key) |
+| `getWalletInfo()` | Get registered addresses, Fluid ID, and email for your API key |
+| `getUsageStats(email)` | Get API call counts — total, today, 7-day chart, per-endpoint |
+| `getBalance(chain?)` | Get USDC balance of your registered wallet |
+| `getQuote(tokenIn, tokenOut, amountIn, network?)` | Get best SOR routes |
+| `send(params)` | Send USDC server-side (no local signing needed) |
+| `swap(params)` | Execute FluidSOR swap server-side (no local signing needed) |
 | `setApiKey(key)` | Update API key at runtime |
 
 ### Helper functions

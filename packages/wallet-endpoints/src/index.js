@@ -83,6 +83,34 @@ export class FluidWalletClient {
     return res.json();
   }
 
+  // ── Wallet info ─────────────────────────────────────────────────────────────
+
+  /**
+   * Get your registered wallet addresses, Fluid ID, and email for your API key.
+   * @returns {Promise<import("./index.d.ts").WalletInfoResponse>}
+   */
+  async getWalletInfo() {
+    const res = await fetch(
+      `${this.baseUrl}/api/v1/wallet/info`,
+      { headers: this._authHeader }
+    );
+    return res.json();
+  }
+
+  // ── Usage stats ─────────────────────────────────────────────────────────────
+
+  /**
+   * Get API usage statistics for your API key.
+   * @param {string} email Your registered developer email
+   * @returns {Promise<import("./index.d.ts").UsageStatsResponse>}
+   */
+  async getUsageStats(email) {
+    const res = await fetch(
+      `${this.baseUrl}/api/developer/usage?email=${encodeURIComponent(email)}`
+    );
+    return res.json();
+  }
+
   // ── Balance ─────────────────────────────────────────────────────────────────
 
   /**
