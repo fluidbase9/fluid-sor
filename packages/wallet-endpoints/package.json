@@ -1,7 +1,7 @@
 {
   "name": "@fluidwalletbase/wallet-endpoints",
-  "version": "1.0.8",
-  "description": "Fluid Wallet developer SDK — authentication, wallet generation (ETH/Base/SOL), and SOR quote endpoints",
+  "version": "1.0.9",
+  "description": "Fluid Wallet developer SDK — FluidWalletClient for balance, quotes, send, swap, Fluid IDs, and analytics",
   "main":  "src/index.js",
   "types": "src/index.d.ts",
   "exports": {
@@ -10,8 +10,11 @@
       "default": "./src/index.js"
     }
   },
-  "files": ["src", "README.md"],
-  "keywords": ["fluid", "defi", "wallet", "sdk", "swap", "sor", "base", "solana", "ethereum", "usdc"],
+  "bin": {
+    "create-fluid-wallet-app": "./bin/create-fluid-wallet-app.js"
+  },
+  "files": ["bin", "src", "templates", "README.md"],
+  "keywords": ["fluid", "defi", "wallet", "sdk", "swap", "sor", "base", "solana", "ethereum", "usdc", "create-fluid-wallet-app"],
   "license": "MIT",
   "author": "Fluid Wallet <dev@fluidnative.com> (https://fluidnative.com)",
   "repository": {
@@ -19,5 +22,8 @@
     "url": "https://github.com/fluidbase9/fluid-wallet-endpoints.git"
   },
   "homepage": "https://fluidnative.com",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {}
 }

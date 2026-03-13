@@ -1,14 +1,33 @@
 # @fluidwalletbase/wallet-endpoints
 
-Developer SDK for the Fluid Smart Order Router — authentication, wallet generation, and USDC swap routing on Base.
+Developer SDK for the Fluid Smart Order Router — `FluidWalletClient` for balance, SOR quotes, send, swap, Fluid IDs, and analytics.
 
-**Supported chains:** Ethereum · Base · Solana
-**Supported tokens:** USDC only
+**Supported chains:** Ethereum · Base · Solana · Injective
 **Powered by:** FluidSOR smart contract (`0xF24daF8Fe15383fb438d48811E8c4b43749DafAE`)
 
 ---
 
-## Installation
+## Scaffold a starter app (recommended)
+
+The fastest way to experiment with every endpoint — scaffolds a TypeScript + React app with a live endpoint explorer, pre-wired with your API key:
+
+```bash
+npx @fluidwalletbase/wallet-endpoints create my-fluid-app
+```
+
+The CLI asks for your **Fluid API key** (`fw_sor_...`) and sets up `.env.local` automatically.
+
+```
+cd my-fluid-app
+npm run dev
+# → http://localhost:5173
+```
+
+The starter app opens a browser UI where you can run any `FluidWalletClient` method with one click and see the raw JSON response — no coding required to explore.
+
+---
+
+## Install standalone
 
 ```bash
 npm install @fluidwalletbase/wallet-endpoints
