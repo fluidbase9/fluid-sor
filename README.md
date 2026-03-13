@@ -49,7 +49,7 @@ npm run dev
 
 ---
 
-## What you get (v1.0.23)
+## What you get (v1.0.31)
 
 The scaffolded app ships the **same UI as the Fluid Smart Order Routing page** — drop it straight into your dApp.
 
