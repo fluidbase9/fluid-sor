@@ -4,6 +4,7 @@
 const path         = require("path");
 const fs           = require("fs");
 const readline     = require("readline");
+const crypto       = require("crypto");
 const { execSync } = require("child_process");
 
 // ─── ANSI colours ─────────────────────────────────────────────────────────────
@@ -85,12 +86,79 @@ function detectPm() {
   return "npm";
 }
 
+// ─── BIP-39 / BIP-32 / BIP-44 key derivation (Node built-ins only) ───────────
+
+const SECP256K1_N = BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141");
+
+function deriveChildKey(key, chainCode, index) {
+  const indexBuf = Buffer.allocUnsafe(4);
+  indexBuf.writeUInt32BE(index);
+  let data;
+  if (index >= 0x80000000) {
+    // Hardened: 0x00 || key || index
+    data = Buffer.concat([Buffer.alloc(1, 0), key, indexBuf]);
+  } else {
+    // Normal: compressed_pubkey || index
+    const ecdh = crypto.createECDH("secp256k1");
+    ecdh.setPrivateKey(key);
+    data = Buffer.concat([ecdh.getPublicKey(null, "compressed"), indexBuf]);
+  }
+  const I        = crypto.createHmac("sha512", chainCode).update(data).digest();
+  const childBig = (BigInt("0x" + I.slice(0, 32).toString("hex")) + BigInt("0x" + key.toString("hex"))) % SECP256K1_N;
+  return { key: Buffer.from(childBig.toString(16).padStart(64, "0"), "hex"), chainCode: I.slice(32) };
+}
+
+function derivePrivateKey(mnemonic) {
+  // BIP-39: seed = PBKDF2(mnemonic, "mnemonic", 2048, 64, sha512)
+  const seed = crypto.pbkdf2Sync(
+    Buffer.from(mnemonic.trim().normalize("NFKD"), "utf8"),
+    Buffer.from("mnemonic", "utf8"),
+    2048, 64, "sha512"
+  );
+  // BIP-32 master key from seed
+  const I    = crypto.createHmac("sha512", "Bitcoin seed").update(seed).digest();
+  let node   = { key: I.slice(0, 32), chainCode: I.slice(32) };
+  // BIP-44 path m/44'/60'/0'/0/0
+  for (const idx of [0x8000002c, 0x8000003c, 0x80000000, 0, 0]) {
+    node = deriveChildKey(node.key, node.chainCode, idx);
+  }
+  return "0x" + node.key.toString("hex");
+}
+
 // ─── Prompt helper ────────────────────────────────────────────────────────────
 
 function prompt(question) {
   return new Promise((resolve) => {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     rl.question(question, (answer) => { rl.close(); resolve(answer.trim()); });
+  });
+}
+
+// ─── Hidden input prompt (seed phrase — no echo to terminal) ─────────────────
+
+function promptHidden(question) {
+  return new Promise((resolve) => {
+    process.stdout.write(question);
+    let value = "";
+    if (process.stdin.isTTY) process.stdin.setRawMode(true);
+    process.stdin.resume();
+    process.stdin.setEncoding("utf8");
+    const onData = (char) => {
+      if (char === "\r" || char === "\n") {
+        process.stdout.write("\n");
+        if (process.stdin.isTTY) process.stdin.setRawMode(false);
+        process.stdin.pause();
+        process.stdin.removeListener("data", onData);
+        resolve(value.trim());
+      } else if (char === "\u0003") {
+        process.stdout.write("\n"); process.exit(1);
+      } else if (char === "\u007f" || char === "\b") {
+        value = value.slice(0, -1);
+      } else {
+        value += char;
+      }
+    };
+    process.stdin.on("data", onData);
   });
 }
 
@@ -123,28 +191,27 @@ async function promptApiKey() {
 
 async function promptSeedPhrase() {
   log("");
-  log(`  ${C.bold}Fluid Account Seed Phrase${C.reset}`);
-  log(`  ${C.gray}Your 12 or 24-word BIP-39 mnemonic — the master key for your Fluid wallet.${C.reset}`);
-  log(`  ${C.gray}Used to derive your wallet address and sign transactions server-side.${C.reset}`);
-  log(`  ${C.yellow}!${C.reset}  ${C.gray}Never share this with anyone. It is written only to ${C.cyan}.env.local${C.gray} (git-ignored).${C.reset}`);
+  log(`  ${C.bold}Wallet Signing Key Setup${C.reset}`);
+  log(`  ${C.gray}Enter your 12 or 24-word BIP-39 seed phrase to derive your signing key.${C.reset}`);
+  log(`  ${C.gray}The private key is derived in-process (BIP-44 m/44'/60'/0'/0/0).${C.reset}`);
+  log(`  ${C.green}✓${C.reset}  ${C.gray}Input is hidden — seed phrase is ${C.bold}never${C.gray} written to disk.${C.reset}`);
   log("");
 
   while (true) {
-    const phrase = await prompt(
-      `  ${C.cyan}?${C.reset} Paste seed phrase ${C.dim}(12 or 24 words)${C.reset}: `
+    const phrase = await promptHidden(
+      `  ${C.cyan}?${C.reset} Seed phrase (hidden): `
     );
-    if (!phrase.trim()) {
-      err("Seed phrase is required to set up your Fluid wallet. Cannot proceed without it.");
+    if (!phrase) {
+      err("Seed phrase is required. Cannot proceed without it.");
       continue;
     }
-    const words = phrase.trim().split(/\s+/);
-    if (words.length !== 12 && words.length !== 24) {
-      err(`Expected 12 or 24 words — got ${words.length}. Check your phrase and try again.`);
+    const words = phrase.split(/\s+/);
+    if (words.length !== 12 && words.length !== 15 && words.length !== 18 && words.length !== 24) {
+      err(`Expected 12, 15, 18, or 24 words — got ${words.length}. Check your phrase and try again.`);
       continue;
     }
-    const preview = `${words[0]} ${words[1]} ${words[2]} … ${words[words.length - 1]}`;
-    ok(`Seed phrase accepted  ${C.dim}(${words.length} words: ${preview})${C.reset}`);
-    return phrase.trim();
+    ok(`Seed phrase received  ${C.dim}(${words.length} words — input hidden)${C.reset}`);
+    return phrase;
   }
 }
 
@@ -174,8 +241,8 @@ async function main() {
   step(1, TOTAL_STEPS, "Fluid API key setup");
   const apiKey = await promptApiKey();
 
-  // ── Step 2: Seed phrase ────────────────────────────────────────────────────
-  step(2, TOTAL_STEPS, "Fluid account seed phrase");
+  // ── Step 2: Seed phrase (hidden) + derive private key ─────────────────────
+  step(2, TOTAL_STEPS, "Derive signing key from seed phrase");
   const seedPhrase = await promptSeedPhrase();
 
   // ── Step 3: Scaffold ───────────────────────────────────────────────────────
@@ -195,17 +262,25 @@ async function main() {
     info("  →", `cd ${projectName} && npm install`);
   }
 
-  // ── Step 5: Write .env.local ───────────────────────────────────────────────
-  step(5, TOTAL_STEPS, "Writing .env.local…");
+  // ── Step 5: Derive private key + write .env.local ─────────────────────────
+  step(5, TOTAL_STEPS, "Deriving signing key and writing .env.local…");
+
+  let privateKey;
+  try {
+    privateKey = derivePrivateKey(seedPhrase);
+  } catch (e) {
+    err("Key derivation failed: " + (e && e.message ? e.message : String(e)));
+    process.exit(1);
+  }
 
   const envContent = [
     "# ─── Fluid SDK API key (REQUIRED) ───────────────────────────────────────────",
     "# Derive yours: fluidnative.com → Developer Console → API Keys tab",
     `VITE_FLUID_API_KEY=${apiKey}`,
     "",
-    "# ─── Fluid account seed phrase (REQUIRED) ───────────────────────────────────",
-    "# Your 12 or 24-word BIP-39 mnemonic — derives your wallet addresses",
-    `VITE_FLUID_SEED_PHRASE=${seedPhrase}`,
+    "# ─── Signing key (derived from seed phrase — seed phrase never stored) ───────",
+    "# ⚠ Never commit this file — it is git-ignored",
+    `VITE_FLUID_PRIVATE_KEY=${privateKey}`,
     "",
     "# ─── FluidSOR contract (pre-filled — live on Base mainnet) ──────────────────",
     "VITE_FLUID_SOR_ADDRESS=0xF24daF8Fe15383fb438d48811E8c4b43749DafAE",
@@ -217,7 +292,8 @@ async function main() {
   const gitignore = ["node_modules", ".env.local", "dist", ".DS_Store"].join("\n");
   fs.writeFileSync(path.join(projectPath, ".gitignore"), gitignore + "\n");
 
-  ok(`API key + seed phrase written to ${C.gray}.env.local${C.reset}`);
+  ok(`API key written  ${C.dim}${apiKey.slice(0, 13)}•••${C.reset}`);
+  ok(`Signing key derived  ${C.dim}${privateKey.slice(0, 8)}… (seed phrase not stored)${C.reset}`);
 
   // ── Done ───────────────────────────────────────────────────────────────────
   log("");

@@ -24,23 +24,21 @@ npx @fluidwalletbase/sdk create my-swap-app
 
 The CLI will interactively ask for:
 1. **Fluid API key** (`fw_sor_...`) — get it at [fluidnative.com → Developer Console → API Keys](https://fluidnative.com)
-2. **12-word seed phrase** — your signing key is derived automatically (BIP-44 `m/44'/60'/0'/0/0`), no MetaMask needed
-
-Both are written into `.env.local` automatically. A `.gitignore` is created to protect your keys.
+2. **Seed phrase** (hidden input — never echoed, never written to disk) — your signing key is derived in-process (BIP-44 `m/44'/60'/0'/0/0`) and only the private key is saved to `.env.local`
 
 ```
 # [1/5] Fluid API key setup
 # ? Paste API key (fw_sor_...): fw_sor_...
 #
-# [2/5] Wallet setup — derive signing key from seed phrase
-# ? Enter seed phrase (12 words):
-#   abandon word1 word2 ... word12
-# ✓ Key derived from seed phrase  0x1ab42cc•••••••••••••
-#   Path: m/44'/60'/0'/0/0  (standard Ethereum / Base)
+# [2/5] Derive signing key from seed phrase
+# ? Seed phrase (hidden):          ← input invisible
+# ✓ Seed phrase received  (12 words — input hidden)
 #
 # [3/5] Scaffolding my-swap-app…
 # [4/5] Installing dependencies…
-# [5/5] Writing .env.local…  ✓ API key  ✓ Signing key derived
+# [5/5] Deriving signing key and writing .env.local…
+# ✓ API key written   fw_sor_48d688•••
+# ✓ Signing key derived  0x1ab42c… (seed phrase not stored)
 ```
 
 ```bash

@@ -19,7 +19,6 @@ export const IS_DEPLOYED =
 
 export const FLUID_API_KEY     = import.meta.env.VITE_FLUID_API_KEY     as string | undefined;
 export const FLUID_PRIVATE_KEY = import.meta.env.VITE_FLUID_PRIVATE_KEY as string | undefined;
-export const FLUID_SEED_PHRASE = import.meta.env.VITE_FLUID_SEED_PHRASE as string | undefined;
 
 // ─── Networks ─────────────────────────────────────────────────────────────────
 

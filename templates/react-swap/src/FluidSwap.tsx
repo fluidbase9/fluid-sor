@@ -22,7 +22,6 @@ import {
   BASESCAN,
   FLUID_API_KEY,
   FLUID_PRIVATE_KEY,
-  FLUID_SEED_PHRASE,
   CHAIN,
   BASE_RPC_URL,
   type Token,
