@@ -1,6 +1,6 @@
 {
   "name": "@fluidwalletbase/wallet-endpoints",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Fluid Wallet developer SDK — authentication, wallet generation (ETH/Base/SOL), and SOR quote endpoints",
   "main":  "src/index.js",
   "types": "src/index.d.ts",

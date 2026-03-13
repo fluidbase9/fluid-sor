@@ -27,6 +27,47 @@ export interface KeyInfoResponse {
   error?:           string;
 }
 
+export interface FluidIdResolveResponse {
+  success:      boolean;
+  username?:    string;
+  address?:     string;
+  networkId?:   string;
+  displayName?: string | null;
+  avatarUrl?:   string | null;
+  error?:       string;
+}
+
+export interface FluidIdReverseResponse {
+  success:   boolean;
+  username?: string | null;
+  address?:  string;
+  message?:  string;
+  error?:    string;
+}
+
+export interface SwapHistoryEntry {
+  id:           number;
+  fromChain:    string;
+  toChain:      string;
+  fromToken:    string;
+  toToken:      string;
+  fromAmount:   string;
+  toAmount?:    string | null;
+  usdValue?:    string | null;
+  txHash?:      string | null;
+  explorerUrl?: string | null;
+  provider?:    string | null;
+  venue?:       string | null;
+  status:       string;
+  createdAt:    string;
+}
+
+export interface SwapHistoryResponse {
+  success: boolean;
+  history: SwapHistoryEntry[];
+  error?:  string;
+}
+
 export interface SorRoute {
   venue:        string;
   amountOut:    string;
@@ -111,6 +152,10 @@ export class FluidWalletClient {
   deactivateKey(email: string): Promise<{ success: boolean; error?: string }>;
   getWalletInfo(): Promise<WalletInfoResponse>;
   getUsageStats(email: string): Promise<UsageStatsResponse>;
+  resolveFluidId(username: string, networkId?: string): Promise<FluidIdResolveResponse>;
+  reverseFluidId(address: string): Promise<FluidIdReverseResponse>;
+  getRoutingPrices(tokenIn: string, tokenOut: string, amountIn: string, network?: "base" | "ethereum" | "solana" | "injective"): Promise<SorQuoteResponse>;
+  getSwapHistory(userEmail: string, limit?: number): Promise<SwapHistoryResponse>;
   getBalance(chain?: "base" | "ethereum" | "solana"): Promise<BalanceResponse>;
   send(params: { chain: "base" | "ethereum" | "solana"; to: string; amount: string; signedTx: string }): Promise<SendResponse>;
   getQuote(tokenIn: string, tokenOut: string, amountIn: string, network?: "base" | "ethereum" | "solana" | "injective"): Promise<SorQuoteResponse>;

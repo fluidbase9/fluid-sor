@@ -109,18 +109,22 @@ await walletClient.writeContract({
 
 ### `FluidWalletClient`
 
-| Method | Description |
-|---|---|
-| `registerKey(email, keyHash, keyHint, eth?, base?, sol?)` | Register SDK key + wallet addresses |
-| `getKeyInfo(email)` | Get key status and registered wallet addresses |
-| `deactivateKey(email)` | Revoke the API key |
-| `getWalletInfo()` | Get registered addresses, Fluid ID, and email for your API key |
-| `getUsageStats(email)` | Get API call counts — total, today, 7-day chart, per-endpoint |
-| `getBalance(chain?)` | Get USDC balance of your registered wallet |
-| `getQuote(tokenIn, tokenOut, amountIn, network?)` | Get best SOR routes |
-| `send(params)` | Send USDC server-side (no local signing needed) |
-| `swap(params)` | Execute FluidSOR swap server-side (no local signing needed) |
-| `setApiKey(key)` | Update API key at runtime |
+| Method | Endpoint | Description |
+|---|---|---|
+| `getWalletInfo()` | `GET /api/v1/wallet/info` | Registered addresses, Fluid ID, email |
+| `getBalance(chain?)` | `GET /api/v1/wallet/balance` | USDC balance on Base · Ethereum · Solana |
+| `getRoutingPrices(tokenIn, tokenOut, amountIn, network?)` | `GET /api/sor/wallet-quote` | Live on-chain SOR prices across 25+ DEX venues |
+| `getQuote(tokenIn, tokenOut, amountIn, network?)` | `GET /api/sor/quote` | Best SOR route (USDC pairs, API key required) |
+| `send(params)` | `POST /api/v1/wallet/send` | Send USDC server-side — no local signing |
+| `swap(params)` | `POST /api/v1/sor/swap` | Execute FluidSOR swap server-side — no local signing |
+| `resolveFluidId(username, networkId?)` | `GET /api/fw-names/resolve/:username` | Fluid ID → wallet address |
+| `reverseFluidId(address)` | `GET /api/fw-names/reverse/:address` | Wallet address → Fluid ID |
+| `getSwapHistory(userEmail, limit?)` | `POST /api/swap/history` | Swap transaction history (up to 50 records) |
+| `getUsageStats(email)` | `GET /api/developer/usage` | API call counts — total, today, 7-day, per-endpoint |
+| `registerKey(email, keyHash, keyHint)` | `POST /api/developer/register-key` | Register SDK key |
+| `getKeyInfo(email)` | `GET /api/developer/key-info` | Key status and wallet addresses |
+| `deactivateKey(email)` | `POST /api/developer/deactivate-key` | Revoke the API key |
+| `setApiKey(key)` | — | Update API key at runtime |
 
 ### Helper functions
 

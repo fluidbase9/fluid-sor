@@ -59,6 +59,47 @@ export interface KeyInfoResponse {
   error?: string;
 }
 
+export interface FluidIdResolveResponse {
+  success:      boolean;
+  username?:    string;
+  address?:     string;           // EVM or Solana address for the requested network
+  networkId?:   string;
+  displayName?: string | null;
+  avatarUrl?:   string | null;
+  error?:       string;
+}
+
+export interface FluidIdReverseResponse {
+  success:  boolean;
+  username?: string | null;       // e.g. "alice" → "alice.fluidbase.eth"
+  address?: string;
+  message?: string;
+  error?:   string;
+}
+
+export interface SwapHistoryEntry {
+  id:               number;
+  fromChain:        string;
+  toChain:          string;
+  fromToken:        string;
+  toToken:          string;
+  fromAmount:       string;
+  toAmount?:        string | null;
+  usdValue?:        string | null;
+  txHash?:          string | null;
+  explorerUrl?:     string | null;
+  provider?:        string | null;
+  venue?:           string | null;
+  status:           string;
+  createdAt:        string;
+}
+
+export interface SwapHistoryResponse {
+  success: boolean;
+  history: SwapHistoryEntry[];
+  error?:  string;
+}
+
 export interface SorRoute {
   venue:        string;
   amountOut:    string;
@@ -275,6 +316,96 @@ export class FluidWalletClient {
     const res = await fetch(
       `${this.baseUrl}/api/developer/usage?email=${encodeURIComponent(email)}`
     );
+    return res.json();
+  }
+
+  // ── Fluid ID ──────────────────────────────────────────────────────────────
+
+  /**
+   * Resolve a Fluid ID (e.g. "alice") to a wallet address.
+   *
+   * Fluid IDs are human-readable names registered in the Fluid Name Service.
+   * Each ID resolves to one or more chain-specific addresses.
+   *
+   * @param username  Fluid ID without suffix — e.g. "alice" (not "alice.fluidbase.eth")
+   * @param networkId Optional chain filter: "ethereum" | "base" | "solana"
+   *
+   * @example
+   * const result = await client.resolveFluidId("alice");
+   * // → { success: true, address: "0xD858...", username: "alice" }
+   */
+  async resolveFluidId(username: string, networkId?: string): Promise<FluidIdResolveResponse> {
+    const qs = networkId ? `?networkId=${encodeURIComponent(networkId)}` : "";
+    const res = await fetch(`${this.baseUrl}/api/fw-names/resolve/${encodeURIComponent(username)}${qs}`);
+    return res.json();
+  }
+
+  /**
+   * Reverse-resolve a wallet address to its Fluid ID.
+   *
+   * @param address  EVM address (0x...) or Solana address
+   *
+   * @example
+   * const result = await client.reverseFluidId("0xD858...");
+   * // → { success: true, username: "alice" }
+   */
+  async reverseFluidId(address: string): Promise<FluidIdReverseResponse> {
+    const res = await fetch(`${this.baseUrl}/api/fw-names/reverse/${encodeURIComponent(address)}`);
+    return res.json();
+  }
+
+  // ── On-chain routing prices ───────────────────────────────────────────────
+
+  /**
+   * Get live on-chain SOR routing prices across all 25+ DEX venues.
+   *
+   * Unlike getQuote() which returns estimated prices, this endpoint fetches
+   * real on-chain quotes from Uniswap V3 QuoterV2, Aerodrome Router, Jupiter,
+   * Helix, and more — for all supported networks and token pairs.
+   *
+   * Supported tokens: USDC, USDT, WETH, ETH, DAI, WBTC, cbBTC, LINK, AAVE,
+   *   UNI, SOL, BONK, WIF, JUP, PYTH, JTO, RENDER, INJ, ATOM, BRETT + more
+   *
+   * @param tokenIn   Input token symbol  e.g. "USDC"
+   * @param tokenOut  Output token symbol e.g. "USDT"
+   * @param amountIn  Human-readable amount e.g. "100"
+   * @param network   "base" | "ethereum" | "solana" | "injective"  (default: "base")
+   *
+   * @example
+   * const { routes } = await client.getRoutingPrices("USDC", "USDT", "100", "base");
+   * // routes[0] → { venue: "Fluid Stable AMM", amountOut: "99.96", badge: "Best" }
+   */
+  async getRoutingPrices(
+    tokenIn:  string,
+    tokenOut: string,
+    amountIn: string,
+    network:  "base" | "ethereum" | "solana" | "injective" = "base",
+  ): Promise<SorQuoteResponse> {
+    const url = `${this.baseUrl}/api/sor/wallet-quote?tokenIn=${tokenIn}&tokenOut=${tokenOut}&amountIn=${amountIn}&network=${network}`;
+    const res = await fetch(url);
+    return res.json();
+  }
+
+  // ── Swap history ─────────────────────────────────────────────────────────
+
+  /**
+   * Get the swap transaction history for a registered developer wallet.
+   *
+   * Returns up to `limit` most-recent swaps in descending order.
+   *
+   * @param userEmail  Developer account email
+   * @param limit      Max records to return (1–50, default 20)
+   *
+   * @example
+   * const { history } = await client.getSwapHistory("you@example.com");
+   * history.forEach(tx => console.log(tx.txHash, tx.fromToken, "→", tx.toToken));
+   */
+  async getSwapHistory(userEmail: string, limit = 20): Promise<SwapHistoryResponse> {
+    const res = await fetch(`${this.baseUrl}/api/swap/history`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ userEmail, limit }),
+    });
     return res.json();
   }
 

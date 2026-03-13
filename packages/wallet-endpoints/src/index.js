@@ -111,6 +111,64 @@ export class FluidWalletClient {
     return res.json();
   }
 
+  // ── Fluid ID ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Resolve a Fluid ID (e.g. "alice") to a wallet address.
+   * @param {string} username  Fluid ID without suffix — e.g. "alice"
+   * @param {string} [networkId]  Optional: "ethereum" | "base" | "solana"
+   * @returns {Promise<import("./index.d.ts").FluidIdResolveResponse>}
+   */
+  async resolveFluidId(username, networkId) {
+    const qs = networkId ? `?networkId=${encodeURIComponent(networkId)}` : "";
+    const res = await fetch(`${this.baseUrl}/api/fw-names/resolve/${encodeURIComponent(username)}${qs}`);
+    return res.json();
+  }
+
+  /**
+   * Reverse-resolve a wallet address to its Fluid ID.
+   * @param {string} address  EVM (0x...) or Solana address
+   * @returns {Promise<import("./index.d.ts").FluidIdReverseResponse>}
+   */
+  async reverseFluidId(address) {
+    const res = await fetch(`${this.baseUrl}/api/fw-names/reverse/${encodeURIComponent(address)}`);
+    return res.json();
+  }
+
+  // ── On-chain routing prices ───────────────────────────────────────────────────
+
+  /**
+   * Get live on-chain SOR routing prices across 25+ DEX venues.
+   * Broader token support than getQuote() — all networks, real on-chain data.
+   * @param {string} tokenIn   e.g. "USDC"
+   * @param {string} tokenOut  e.g. "USDT"
+   * @param {string} amountIn  e.g. "100"
+   * @param {"base"|"ethereum"|"solana"|"injective"} [network]  default: "base"
+   * @returns {Promise<import("./index.d.ts").SorQuoteResponse>}
+   */
+  async getRoutingPrices(tokenIn, tokenOut, amountIn, network = "base") {
+    const url = `${this.baseUrl}/api/sor/wallet-quote?tokenIn=${tokenIn}&tokenOut=${tokenOut}&amountIn=${amountIn}&network=${network}`;
+    const res = await fetch(url);
+    return res.json();
+  }
+
+  // ── Swap history ─────────────────────────────────────────────────────────────
+
+  /**
+   * Get swap transaction history for a developer wallet.
+   * @param {string} userEmail  Developer account email
+   * @param {number} [limit]    Max records (1–50, default 20)
+   * @returns {Promise<import("./index.d.ts").SwapHistoryResponse>}
+   */
+  async getSwapHistory(userEmail, limit = 20) {
+    const res = await fetch(`${this.baseUrl}/api/swap/history`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ userEmail, limit }),
+    });
+    return res.json();
+  }
+
   // ── Balance ─────────────────────────────────────────────────────────────────
 
   /**
