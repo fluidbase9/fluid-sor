@@ -435,6 +435,7 @@ export default function FluidSwap() {
   const [gasTokenPrice, setGasTokenPrice] = useState<number>(0);
   // Registered addresses fetched from server via API key — always correct regardless of local private key
   const [registeredAddrs, setRegisteredAddrs] = useState<{ base: string | null; ethereum: string | null; solana: string | null; injective: string | null }>({ base: null, ethereum: null, solana: null, injective: null });
+  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
 
   const networkMeta     = NETWORKS.find(n => n.id === network)!;
   const networkTokens   = TOKENS_BY_NETWORK[network];
@@ -632,6 +633,7 @@ export default function FluidSwap() {
       .then(d => {
         if (d.success && d.addresses) {
           setRegisteredAddrs({ base: d.addresses.base, ethereum: d.addresses.ethereum, solana: d.addresses.solana, injective: null });
+          if (d.email) setRegisteredEmail(d.email);
         }
       })
       .catch(() => {});
@@ -648,13 +650,12 @@ export default function FluidSwap() {
 
   // Fetch Fluid ID once we know the registered base address
   useEffect(() => {
-    const addr = registeredAddrs.base ?? evmAddress;
-    if (!addr) { setFluidId(null); return; }
-    fetch(`${BASE_URL}/api/fw-names/by-address/${addr}`)
+    if (!registeredEmail) return;
+    fetch(`/api/fw-names/by-email/${encodeURIComponent(registeredEmail)}`)
       .then(r => r.json())
       .then(d => { if (d.fwCore) setFluidId(d.fwCore); })
       .catch(() => {});
-  }, [registeredAddrs.base, evmAddress]);
+  }, [registeredEmail]);
 
   // Sync chainAddress with from-network
   useEffect(() => {
