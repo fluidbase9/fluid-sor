@@ -31,7 +31,9 @@ const _publicClient = createPublicClient({ chain: base, transport: http(BASE_RPC
 
 // ─── API base URL ─────────────────────────────────────────────────────────────
 
-const BASE_URL = (import.meta.env.VITE_BASE_URL as string) || "https://fluidnative.com";
+// Use empty string in dev so Vite proxy forwards /api/* to fluidnative.com (avoids CORS).
+// Set VITE_BASE_URL=https://fluidnative.com in .env.local only for production builds.
+const BASE_URL = (import.meta.env.VITE_BASE_URL as string | undefined) ?? "";
 
 // ─── Injected CSS (same as SDK template index.css) ────────────────────────────
 
