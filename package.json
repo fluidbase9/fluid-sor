@@ -1,6 +1,6 @@
 {
   "name": "@fluidwalletbase/sdk",
-  "version": "1.0.20",
+  "version": "1.0.21",
   "description": "Fluid Smart Order Router SDK — scaffold a swap interface powered by FluidSOR on Base in one command",
   "keywords": [
     "fluid",
