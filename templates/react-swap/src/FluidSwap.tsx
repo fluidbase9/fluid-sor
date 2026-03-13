@@ -808,7 +808,7 @@ export default function FluidSwap() {
       <div style={S.card}>
 
         {/* ── Identity card ── */}
-        {evmAddress && (
+        {(evmAddress || registeredAddrs.base) && (
           <div style={{ background: "#070b10", border: "1px solid #1a2535", borderRadius: 14, padding: "0.75rem 1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             {/* Fluid ID */}
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -917,7 +917,7 @@ export default function FluidSwap() {
         </div>
 
         {/* Wallet balance card */}
-        {evmAddress && (
+        {(evmAddress || registeredAddrs.base) && (
           <div style={{ background: "#0d1117", border: `1px solid ${networkMeta.color}28`, borderRadius: 12, padding: "0.65rem 1rem", display: "flex", flexDirection: "column", gap: "0.35rem" }}>
 
             {/* Header: network name + total USD */}
@@ -1155,7 +1155,7 @@ export default function FluidSwap() {
         )}
 
         {/* ── Transaction History ── */}
-        {evmAddress && (
+        {(evmAddress || registeredAddrs.base) && (
           <div>
             {/* Header toggle */}
             <button onClick={() => setShowHistory(h => !h)}
