@@ -431,6 +431,8 @@ export default function FluidSwap() {
   const [gasBal,    setGasBal]    = useState<{ amount: number; symbol: string; sufficient: boolean } | null>(null);
   const [gasBalLoading, setGasBalLoading] = useState(false);
   const [gasTokenPrice, setGasTokenPrice] = useState<number>(0);
+  // Registered addresses fetched from server via API key — always correct regardless of local private key
+  const [registeredAddrs, setRegisteredAddrs] = useState<{ base: string | null; ethereum: string | null; solana: string | null; injective: string | null }>({ base: null, ethereum: null, solana: null, injective: null });
 
   const networkMeta     = NETWORKS.find(n => n.id === network)!;
   const networkTokens   = TOKENS_BY_NETWORK[network];
@@ -457,58 +459,47 @@ export default function FluidSwap() {
 
   // Wallet balance — fetch ALL tokens for the selected network
   useEffect(() => {
-    if (!evmAddress) { setWalletBal(null); return; }
+    const displayAddr = displayAddress(network);
+    if (!displayAddr) { setWalletBal(null); return; }
     let cancelled = false;
     setWalletBal(null);
     setWalletBalLoading(true);
-    const email = "";
     (async () => {
       try {
         const rows: { token: string; amount: string; usdValue: number }[] = [];
 
         if (network === "base" || network === "ethereum") {
-          // Native token price (ETH)
           let ethPrice = 0;
           try { const p = await fetch(`${BASE_URL}/api/prices/eth`); ethPrice = (await p.json()).price ?? 0; } catch {}
 
-          // ETH native balance
           const rpcUrl = network === "base" ? "https://mainnet.base.org" : "https://ethereum.publicnode.com";
           const ethResp = await fetch(rpcUrl, {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ jsonrpc: "2.0", method: "eth_getBalance", params: [evmAddress, "latest"], id: 1 }),
+            body: JSON.stringify({ jsonrpc: "2.0", method: "eth_getBalance", params: [displayAddr, "latest"], id: 1 }),
           });
           const ethRaw = parseInt((await ethResp.json()).result ?? "0x0", 16) / 1e18;
           rows.push({ token: "ETH", amount: ethRaw < 0.000001 ? "0.000000" : ethRaw.toFixed(6), usdValue: ethRaw * ethPrice });
 
-          // USDC
           const usdcAddr = network === "base" ? "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" : "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-          const usdcResp = await fetch(`${BASE_URL}/api/evm/${network}/token/${usdcAddr}/balance/${evmAddress}`);
+          const usdcResp = await fetch(`${BASE_URL}/api/evm/${network}/token/${usdcAddr}/balance/${displayAddr}`);
           if (usdcResp.ok) {
             const amt = parseFloat((await usdcResp.json()).balance || "0");
             rows.push({ token: "USDC", amount: amt.toFixed(2), usdValue: amt });
           }
 
-          // USDT
           const usdtAddr = network === "base" ? "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2" : "0xdAC17F958D2ee523a2206206994597C13D831ec7";
-          const usdtResp = await fetch(`${BASE_URL}/api/evm/${network}/token/${usdtAddr}/balance/${evmAddress}`);
+          const usdtResp = await fetch(`${BASE_URL}/api/evm/${network}/token/${usdtAddr}/balance/${displayAddr}`);
           if (usdtResp.ok) {
             const amt = parseFloat((await usdtResp.json()).balance || "0");
             rows.push({ token: "USDT", amount: amt.toFixed(2), usdValue: amt });
           }
 
         } else if (network === "solana") {
-          if (!email) { if (!cancelled) setWalletBal([]); return; }
+          const solAddr = registeredAddrs.solana;
+          if (!solAddr) { if (!cancelled) setWalletBal([]); return; }
           let solPrice = 0;
           try { const p = await fetch(`${BASE_URL}/api/crypto/onchain-price/SOL`); solPrice = (await p.json()).price ?? 0; } catch {}
 
-          const deriveResp = await fetch(`${BASE_URL}/api/solana/derive-address`, {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email }),
-          });
-          if (!deriveResp.ok) throw new Error("derive failed");
-          const { address: solAddr } = await deriveResp.json();
-
-          // SOL native
           const solNativeResp = await fetch("https://api.mainnet-beta.solana.com", {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ jsonrpc: "2.0", method: "getBalance", params: [solAddr], id: 1 }),
@@ -517,7 +508,6 @@ export default function FluidSwap() {
           const solAmt = solLamports / 1e9;
           rows.push({ token: "SOL", amount: solAmt.toFixed(4), usdValue: solAmt * solPrice });
 
-          // SPL tokens
           const tokensResp = await fetch(`${BASE_URL}/api/solana/tokens/${solAddr}`);
           const tokensData = tokensResp.ok ? await tokensResp.json() : { tokens: [] };
           const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
@@ -529,16 +519,10 @@ export default function FluidSwap() {
           }
 
         } else if (network === "injective") {
-          if (!email) { if (!cancelled) setWalletBal([]); return; }
+          const injAddr = registeredAddrs.injective;
+          if (!injAddr) { if (!cancelled) setWalletBal([]); return; }
           let injPrice = 0;
           try { const p = await fetch(`${BASE_URL}/api/crypto/onchain-price/INJ`); injPrice = (await p.json()).price ?? 0; } catch {}
-
-          const deriveResp = await fetch(`${BASE_URL}/api/injective/derive-address`, {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email }),
-          });
-          if (!deriveResp.ok) throw new Error("derive failed");
-          const { address: injAddr } = await deriveResp.json();
 
           const balResp = await fetch(`${BASE_URL}/api/injective/balance/${injAddr}`);
           if (balResp.ok) {
@@ -558,15 +542,15 @@ export default function FluidSwap() {
       }
     })();
     return () => { cancelled = true; };
-  }, [network, evmAddress]);
+  }, [network, registeredAddrs, evmAddress]);
 
   // Gas (native token) balance — check on every network change
   useEffect(() => {
-    if (!evmAddress) { setGasBal(null); return; }
+    const displayAddr = displayAddress(network);
+    if (!displayAddr) { setGasBal(null); return; }
     let cancelled = false;
     setGasBal(null);
     setGasBalLoading(true);
-    const email = "";
     (async () => {
       try {
         let amount = 0;
@@ -574,22 +558,20 @@ export default function FluidSwap() {
         if (network === "base") {
           const r = await fetch("https://mainnet.base.org", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ jsonrpc: "2.0", method: "eth_getBalance", params: [evmAddress, "latest"], id: 1 }),
+            body: JSON.stringify({ jsonrpc: "2.0", method: "eth_getBalance", params: [displayAddr, "latest"], id: 1 }),
           });
           const d = await r.json();
           amount = parseInt(d.result, 16) / 1e18;
         } else if (network === "ethereum") {
           const r = await fetch("https://ethereum.publicnode.com", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ jsonrpc: "2.0", method: "eth_getBalance", params: [evmAddress, "latest"], id: 1 }),
+            body: JSON.stringify({ jsonrpc: "2.0", method: "eth_getBalance", params: [displayAddr, "latest"], id: 1 }),
           });
           const d = await r.json();
           amount = parseInt(d.result, 16) / 1e18;
         } else if (network === "solana") {
-          const dr = await fetch(`${BASE_URL}/api/solana/derive-address`, {
-            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }),
-          });
-          const { address: solAddr } = await dr.json();
+          const solAddr = registeredAddrs.solana;
+          if (!solAddr) { if (!cancelled) setGasBal(null); return; }
           const r = await fetch("https://api.mainnet-beta.solana.com", {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ jsonrpc: "2.0", method: "getBalance", params: [solAddr], id: 1 }),
@@ -597,10 +579,8 @@ export default function FluidSwap() {
           const d = await r.json();
           amount = (d.result?.value ?? 0) / 1e9;
         } else if (network === "injective") {
-          const dr = await fetch(`${BASE_URL}/api/injective/derive-address`, {
-            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }),
-          });
-          const { address: injAddr } = await dr.json();
+          const injAddr = registeredAddrs.injective;
+          if (!injAddr) { if (!cancelled) setGasBal(null); return; }
           const r = await fetch(`${BASE_URL}/api/injective/balance/${injAddr}`);
           const d = await r.json();
           amount = parseFloat(d.balance || "0");
@@ -632,7 +612,7 @@ export default function FluidSwap() {
       }
     })();
     return () => { cancelled = true; };
-  }, [network, evmAddress]);
+  }, [network, registeredAddrs, evmAddress]);
 
   // Chain explorer base URLs
   const CHAIN_EXPLORER: Record<Network, string> = {
@@ -643,10 +623,6 @@ export default function FluidSwap() {
   };
 
   // ─── Fetch registered addresses from server using API key ────────────────────
-  // This ensures FROM/TO always shows the address registered at developer sign-up,
-  // regardless of which private key is in VITE_FLUID_PRIVATE_KEY.
-  const [registeredAddrs, setRegisteredAddrs] = useState<{ base: string | null; ethereum: string | null; solana: string | null; injective: string | null }>({ base: null, ethereum: null, solana: null, injective: null });
-
   useEffect(() => {
     if (!FLUID_API_KEY) return;
     fetch(`${BASE_URL}/api/v1/wallet/info`, { headers: { "x-fluid-api-key": FLUID_API_KEY } })
