@@ -751,7 +751,7 @@ export default function FluidSwap() {
 
   const executeSwap = useCallback(async () => {
     const hasQuote = bestRoute || bridgeQuote;
-    if (!hasQuote || !evmAddress) return;
+    if (!hasQuote || (!evmAddress && !registeredAddrs.base)) return;
     setExecModal("executing");
     setExecResult(null);
     try {
@@ -765,8 +765,9 @@ export default function FluidSwap() {
           toToken:    toSym,
           fromAmount: amount,
           toAmount:   bestRoute?.amountOut ?? bridgeQuote?.toAmount,
-          walletAddress: evmAddress,
-          apiKey:       FLUID_API_KEY,
+          walletAddress: registeredAddrs.base ?? evmAddress,
+          userEmail:  registeredEmail,
+          apiKey:     FLUID_API_KEY,
           provider:   bestRoute?.venue ?? bridgeQuote?.provider ?? "FluidSOR",
           usdValue:   (() => {
             const n = parseFloat(amount || "0");
