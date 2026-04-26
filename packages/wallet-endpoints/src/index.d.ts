@@ -1,9 +1,13 @@
+export type WalletType = "client" | "developer";
+
 export interface WalletSet {
   mnemonic:    string;
   ethAddress:  string;
   baseAddress: string;
   solAddress:  string;
   apiKey:      string;
+  walletType?: WalletType;
+  totpEnabled?: boolean;
 }
 
 export interface RegisterKeyResponse {
@@ -147,7 +151,7 @@ export function hashApiKey(apiKey: string): Promise<string>;
 
 export class FluidWalletClient {
   constructor(baseUrl?: string, apiKey?: string | null);
-  registerKey(email: string, keyHash: string, keyHint: string, ethAddress?: string, baseAddress?: string, solAddress?: string): Promise<RegisterKeyResponse>;
+  registerKey(email: string, keyHash: string, keyHint: string, ethAddress?: string, baseAddress?: string, solAddress?: string, walletType?: WalletType, totpEnabled?: boolean, totpSecretHint?: string): Promise<RegisterKeyResponse>;
   getKeyInfo(email: string): Promise<KeyInfoResponse>;
   deactivateKey(email: string): Promise<{ success: boolean; error?: string }>;
   getWalletInfo(): Promise<WalletInfoResponse>;

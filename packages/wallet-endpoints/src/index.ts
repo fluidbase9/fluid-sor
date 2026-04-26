@@ -20,9 +20,13 @@
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export type WalletType = "client" | "developer";
+
 export interface WalletSet {
-  mnemonic:    string;   // BIP-39 seed phrase (12 words) — keep secret, never send to server
-  apiKey:      string;   // Fluid SDK key: fw_sor_... (HMAC-SHA256 of mnemonic, client-side only)
+  mnemonic:     string;       // BIP-39 seed phrase (12 words) — keep secret, never send to server
+  apiKey:       string;       // Fluid SDK key: fw_sor_... (HMAC-SHA256 of mnemonic, client-side only)
+  walletType?:  WalletType;
+  totpEnabled?: boolean;
   // Wallet addresses are derived server-side from email via walletDerivationService.
   // The fields below are returned by registerKey() after server-side derivation.
   ethAddress?:  string;   // Ethereum mainnet address (server-derived)
@@ -238,17 +242,20 @@ export class FluidWalletClient {
    * This is called once from the Fluid Wallet Developer Console.
    */
   async registerKey(
-    email:        string,
-    keyHash:      string,
-    keyHint:      string,
-    ethAddress?:  string,
-    baseAddress?: string,
-    solAddress?:  string,
+    email:             string,
+    keyHash:           string,
+    keyHint:           string,
+    ethAddress?:       string,
+    baseAddress?:      string,
+    solAddress?:       string,
+    walletType?:       WalletType,
+    totpEnabled?:      boolean,
+    totpSecretHint?:   string,
   ): Promise<RegisterKeyResponse> {
     const res = await fetch(`${this.baseUrl}/api/developer/register-key`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ email, keyHash, keyHint, ethAddress, baseAddress, solAddress }),
+      body:    JSON.stringify({ email, keyHash, keyHint, ethAddress, baseAddress, solAddress, walletType, totpEnabled, totpSecretHint }),
     });
     return res.json();
   }

@@ -162,24 +162,115 @@ function promptHidden(question) {
   });
 }
 
-// ─── Interactive API key prompt ───────────────────────────────────────────────
+// ─── Interactive API key prompt (two paths: generate inline OR paste) ────────
 
 async function promptApiKey() {
   log(`  ${C.bold}Fluid SDK API Key${C.reset}`);
   log(`  ${C.gray}Gates access to the SOR quote endpoint (live DEX price indexing).${C.reset}`);
-  log(`  ${C.gray}Derive yours: ${C.cyan}fluidnative.com${C.gray} → Developer Console → API Keys tab${C.reset}`);
+  log("");
+  log(`  ${C.cyan}?${C.reset} How would you like to set up your API key?`);
+  log(`  ${C.gray}  1${C.reset}  Generate a new key right now ${C.green}(recommended)${C.reset}`);
+  log(`  ${C.gray}  2${C.reset}  Paste an existing key from the dashboard`);
+  log(`  ${C.dim}     (dashboard: fluidnative.com → Developer Console → API Keys)${C.reset}`);
   log("");
 
   while (true) {
-    const key = await prompt(
-      `  ${C.cyan}?${C.reset} Paste API key ${C.dim}(fw_sor_...)${C.reset}: `
-    );
+    const choice = await prompt(`  ${C.cyan}?${C.reset} Enter 1 or 2: `);
+    if (choice === "1") return generateApiKeyInTerminal();
+    if (choice === "2") return pasteApiKeyFromDashboard();
+    err("Please enter 1 or 2.");
+  }
+}
+
+// ─── Option 1: Generate key inline in terminal ────────────────────────────────
+
+async function generateApiKeyInTerminal() {
+  log("");
+  log(`  ${C.bold}Generate API Key${C.reset}`);
+  log(`  ${C.gray}Your key will be generated locally and registered with Fluid.${C.reset}`);
+  log(`  ${C.gray}A wallet is derived server-side from your email (no seed phrase needed here).${C.reset}`);
+  log("");
+
+  // ── Ask for email ──────────────────────────────────────────────────────────
+  let email;
+  while (true) {
+    email = await prompt(`  ${C.cyan}?${C.reset} Your email address: `);
+    if (!email || !email.includes("@") || !email.includes(".")) {
+      err("Please enter a valid email address.");
+      continue;
+    }
+    break;
+  }
+
+  log("");
+  log(`  ${C.gray}Generating key...${C.reset}`);
+
+  // ── Generate fw_sor_ key locally ──────────────────────────────────────────
+  const rawRandom = crypto.randomBytes(24).toString("hex");
+  const fullKey   = `fw_sor_${rawRandom}`;
+  const keyHint   = fullKey.slice(0, 12);
+  const keyHash   = crypto.createHash("sha256").update(fullKey).digest("hex");
+
+  // ── Register with Fluid backend ───────────────────────────────────────────
+  try {
+    const res  = await fetch("https://fluidnative.com/api/developer/register-key", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ email, keyHash, keyHint }),
+    });
+    const data = await res.json();
+
+    if (!data.success) {
+      err("Registration failed: " + (data.error || "Unknown error"));
+      err("Falling back — try option 2 to paste an existing key.");
+      process.exit(1);
+    }
+
+    // ── Show key ONCE ─────────────────────────────────────────────────────
+    log("");
+    log(`  ${C.green}${C.bold}✓  API key generated and registered!${C.reset}`);
+    log("");
+    log(`  ${C.bold}Your API key — shown once, save it now:${C.reset}`);
+    log(`  ${C.cyan}${C.bold}${fullKey}${C.reset}`);
+    log("");
+    log(`  ${C.yellow}⚠  This key will not be shown again.${C.reset}`);
+    log(`  ${C.gray}   It will be written to .env.local automatically.${C.reset}`);
+    log("");
+
+    if (data.wallets) {
+      log(`  ${C.bold}Registered wallets (derived from your email):${C.reset}`);
+      if (data.wallets.base)     ok(`Base:     ${C.gray}${data.wallets.base}${C.reset}`);
+      if (data.wallets.ethereum) ok(`Ethereum: ${C.gray}${data.wallets.ethereum}${C.reset}`);
+      if (data.wallets.solana)   ok(`Solana:   ${C.gray}${data.wallets.solana}${C.reset}`);
+      log("");
+    }
+
+    await prompt(`  ${C.dim}Press Enter to continue...${C.reset} `);
+    return fullKey;
+
+  } catch (e) {
+    err("Network error — could not reach fluidnative.com");
+    err("Check your internet connection, or use option 2 to paste an existing key.");
+    process.exit(1);
+  }
+}
+
+// ─── Option 2: Paste existing key from dashboard ──────────────────────────────
+
+async function pasteApiKeyFromDashboard() {
+  log("");
+  log(`  ${C.bold}Paste Existing Key${C.reset}`);
+  log(`  ${C.gray}Get yours at: ${C.cyan}fluidnative.com${C.gray} → Developer Console → API Keys${C.reset}`);
+  log("");
+
+  while (true) {
+    const key = await prompt(`  ${C.cyan}?${C.reset} Paste API key ${C.dim}(fw_sor_...)${C.reset}: `);
     if (!key.trim()) {
-      err(`API key is required. Get yours at ${C.cyan}fluidnative.com${C.reset} → Developer Console → API Keys.`);
+      err("API key is required.");
       continue;
     }
     if (!key.trim().startsWith("fw_sor_")) {
-      err(`Invalid format — keys start with ${C.cyan}fw_sor_${C.reset}. Try again.`);
+      err(`Invalid format — keys must start with ${C.cyan}fw_sor_${C.reset}. Try again.`);
       continue;
     }
     ok(`API key accepted  ${C.dim}${key.slice(0, 13)}${"•".repeat(10)}${C.reset}`);

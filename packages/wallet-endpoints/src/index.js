@@ -58,11 +58,11 @@ export class FluidWalletClient {
 
   // ── Key management ──────────────────────────────────────────────────────────
 
-  async registerKey(email, keyHash, keyHint, ethAddress, baseAddress, solAddress) {
+  async registerKey(email, keyHash, keyHint, ethAddress, baseAddress, solAddress, walletType, totpEnabled, totpSecretHint) {
     const res = await fetch(`${this.baseUrl}/api/developer/register-key`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ email, keyHash, keyHint, ethAddress, baseAddress, solAddress }),
+      body:    JSON.stringify({ email, keyHash, keyHint, ethAddress, baseAddress, solAddress, walletType, totpEnabled, totpSecretHint }),
     });
     return res.json();
   }
