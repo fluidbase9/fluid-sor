@@ -2,8 +2,13 @@
 
 > Scaffold a production-ready swap interface powered by the **Fluid Smart Order Router** — identical UI to the Fluid SOR page, in one command.
 
+> **The Next Trillion Agents. One Wallet to Power It All.**  
+> Build the DeFi infrastructure they depend on. Make something agents want.
+
 [![npm version](https://img.shields.io/npm/v/@fluidwalletbase/sdk.svg)](https://www.npmjs.com/package/@fluidwalletbase/sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-cyan.svg)](./LICENSE)
+[![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-00ced1)](https://fluidnative.com)
+[![Agent Economy](https://img.shields.io/badge/Agent_Economy-Ready-ff6b35)](https://fluidnative.com)
 
 ---
 
