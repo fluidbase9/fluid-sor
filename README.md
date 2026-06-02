@@ -151,7 +151,7 @@ receipt     →  { txHash: "0x...", explorerUrl: "https://basescan.org/tx/0x..."
 
 265,000-row simulation dataset validating all paper metrics across 10 CSV files.
 
-📊 [kaggle.com/datasets/abhijeethganji9/ganji-defi-sor-protocol](https://www.kaggle.com/datasets/abhijeethganji9/ganji-defi-sor-protocol)
+📊 [kaggle.com/code/abhijeethganji9/ganji-s-defi-sor-protocol](https://www.kaggle.com/code/abhijeethganji9/ganji-s-defi-sor-protocol)
 
 ---
 
