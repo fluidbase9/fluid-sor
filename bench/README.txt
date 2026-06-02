@@ -158,7 +158,7 @@ Files:       10 CSV files
 Ganji, Abhijeeth; Velpula, Priyanka, 2026,
 "Ganji's DeFi SOR Protocol - Large Scale Research Dataset"
 265,000+ rows, 10 CSV files
-Kaggle: kaggle.com/datasets/abhijeethganji9/ganji-defi-sor-protocol
+Kaggle: https://www.kaggle.com/code/abhijeethganji9/ganji-s-defi-sor-protocol
 GitHub: github.com/fluidbase9/fluid-sor
 Paper: Ganji's DeFi SOR Protocol: Multi-Venue Smart Order Routing
        for Human and Agent-Native Crypto Swaps on Base
