@@ -1,0 +1,40 @@
+{
+  "title": "Ganji's DeFi SOR Protocol Research Dataset",
+  "id": "abhijeethganji9/ganji-defi-sor-protocol",
+  "licenses": [
+    {
+      "name": "CC BY 4.0"
+    }
+  ],
+  "keywords": [
+    "DeFi",
+    "Smart Order Routing",
+    "Blockchain",
+    "Autonomous Agents",
+    "Cryptography",
+    "Base Mainnet",
+    "Bellman-Ford",
+    "DEX Aggregator",
+    "Ganji SOR Protocol",
+    "REI",
+    "VCS",
+    "VER",
+    "Pauli Proof",
+    "Ganji Nonce Vector N4",
+    "Ganji Sovereignty Weight",
+    "FluidNative",
+    "Maryville University",
+    "Agentic Payments",
+    "Multi-Venue Routing",
+    "Cross-Chain",
+    "MEV Protection",
+    "Split Routing",
+    "Price Impact",
+    "Circuit Breaker",
+    "Zero Knowledge Proofs",
+    "Self Custodial",
+    "GanjiRoute",
+    "GAF Route",
+    "Agent Native DeFi"
+  ]
+}
