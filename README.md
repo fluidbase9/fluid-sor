@@ -1,231 +1,192 @@
-# @fluidwalletbase/sdk
+# Ganji's DeFi SOR Protocol
 
-> Scaffold a production-ready swap interface powered by the **Fluid Smart Order Router** — identical UI to the Fluid SOR page, in one command.
+**Smart Order Routing for autonomous agents and developers on Base Mainnet.**
 
-> **The Next Trillion Agents. One Wallet to Power It All.**  
-> Build the DeFi infrastructure they depend on. Make something agents want.
-
-[![npm version](https://img.shields.io/npm/v/@fluidwalletbase/sdk.svg)](https://www.npmjs.com/package/@fluidwalletbase/sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-cyan.svg)](./LICENSE)
-[![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-00ced1)](https://fluidnative.com)
-[![Agent Economy](https://img.shields.io/badge/Agent_Economy-Ready-ff6b35)](https://fluidnative.com)
+[![Base Mainnet](https://img.shields.io/badge/Base-Mainnet-0052FF)](https://base.org)
+[![npm](https://img.shields.io/npm/v/@fluidwalletbase/sdk.svg)](https://www.npmjs.com/package/@fluidwalletbase/sdk)
+
+**Contract:** `0xF24daF8Fe15383fb438d48811E8c4b43749DafAE` — Base Mainnet (Chain ID: 8453)  
+**Paper:** Ganji's DeFi SOR Protocol: Multi-Venue Smart Order Routing for Human and Agent-Native Crypto Swaps on Base  
+**Authors:** Abhijeeth Ganji (Maryville University), Priyanka Velpula (Ex-Wipro)
 
 ---
 
-## Packages
-
-| Package | Description |
-|---|---|
-| [`@fluidwalletbase/sdk`](https://www.npmjs.com/package/@fluidwalletbase/sdk) | CLI scaffold — creates a full swap app in one command |
-| [`@fluidwalletbase/wallet-endpoints`](https://www.npmjs.com/package/@fluidwalletbase/wallet-endpoints) | Developer SDK — `FluidWalletClient` for balance, quotes, send, swap |
-
----
-
-## Quick start
+## Public Quote Endpoint — No API Key Required
 
 ```bash
-npx @fluidwalletbase/sdk create my-swap-app
+GET https://fluidnative.com/api/sor/public-quote
 ```
 
-The CLI will interactively ask for:
-1. **Fluid API key** (`fw_sor_...`) — get it at [fluidnative.com → Developer Console → API Keys](https://fluidnative.com)
-2. **Seed phrase** (hidden input — never echoed, never written to disk) — your signing key is derived in-process (BIP-44 `m/44'/60'/0'/0/0`) and only the private key is saved to `.env.local`
+**Parameters**
 
-```
-# [1/5] Fluid API key setup
-# ? Paste API key (fw_sor_...): fw_sor_...
-#
-# [2/5] Derive signing key from seed phrase
-# ? Seed phrase (hidden):          ← input invisible
-# ✓ Seed phrase received  (12 words — input hidden)
-#
-# [3/5] Scaffolding my-swap-app…
-# [4/5] Installing dependencies…
-# [5/5] Deriving signing key and writing .env.local…
-# ✓ API key written   fw_sor_48d688•••
-# ✓ Signing key derived  0x1ab42c… (seed phrase not stored)
-```
+| Param | Required | Description |
+|-------|----------|-------------|
+| `tokenIn` | ✅ | Source token: `USDC`, `USDT`, `WETH`, `ETH` |
+| `tokenOut` | ✅ | Destination token |
+| `amountIn` | ✅ | Amount as a number string |
+
+**Supported pairs:** `USDC/USDT` · `USDC/WETH` · `USDT/USDC` · `WETH/USDC`
+
+**Rate limit:** 30 requests/minute per IP
+
+---
+
+### curl
 
 ```bash
-cd my-swap-app
-npm run dev
-# → http://localhost:5173
+curl "https://fluidnative.com/api/sor/public-quote?tokenIn=USDC&tokenOut=USDT&amountIn=1000"
+```
+
+### Python
+
+```python
+import requests
+
+resp = requests.get("https://fluidnative.com/api/sor/public-quote", params={
+    "tokenIn":  "USDC",
+    "tokenOut": "USDT",
+    "amountIn": "1000"
+})
+data = resp.json()
+print(data["bestVenue"])       # "Fluid AMM + Uniswap V3 (60/40 split)"
+print(data["bestAmountOut"])   # "999.90"
+print(data["routes"])          # all ranked routes
+```
+
+### JavaScript / Node.js
+
+```js
+const res = await fetch(
+  "https://fluidnative.com/api/sor/public-quote?tokenIn=USDC&tokenOut=USDT&amountIn=1000"
+);
+const { bestVenue, bestAmountOut, routes } = await res.json();
+console.log(bestVenue, bestAmountOut);
+```
+
+### Response
+
+```json
+{
+  "protocol":    "Ganji SOR Protocol",
+  "contract":    "0xF24daF8Fe15383fb438d48811E8c4b43749DafAE",
+  "chain":       "Base Mainnet",
+  "chainId":     8453,
+  "tokenIn":     "USDC",
+  "tokenOut":    "USDT",
+  "amountIn":    "1000",
+  "bestVenue":   "Fluid AMM + Uniswap V3 (60/40 split)",
+  "bestAmountOut": "999.90",
+  "splitRouteAvailable": true,
+  "routes": [
+    {
+      "venue":          "Fluid AMM + Uniswap V3 (60/40 split)",
+      "amountOut":      "999.90",
+      "priceImpactBps": "0.1",
+      "gasEstimateUsd": "0.06",
+      "splitBps":       6000,
+      "badge":          "Max Saving",
+      "recommended":    true
+    },
+    {
+      "venue":          "Fluid Stable AMM",
+      "amountOut":      "999.60",
+      "priceImpactBps": "0.2",
+      "gasEstimateUsd": "0.03",
+      "badge":          "Fluid Best"
+    },
+    {
+      "venue":          "Uniswap V3",
+      "amountOut":      "999.30",
+      "priceImpactBps": "0.7",
+      "gasEstimateUsd": "0.04",
+      "badge":          "Lowest Gas"
+    },
+    {
+      "venue":          "Aerodrome Stable",
+      "amountOut":      "999.10",
+      "priceImpactBps": "0.9",
+      "gasEstimateUsd": "0.03"
+    }
+  ],
+  "rateLimit": { "remaining": 29, "resetAt": 1748880000000 },
+  "timestamp": 1748879940000,
+  "docs": "github.com/fluidbase9/fluid-sor"
+}
 ```
 
 ---
 
-## What you get (v1.0.31)
+## SDK Setup — Execute Swaps (API Key Required)
 
-The scaffolded app ships the **same UI as the Fluid Smart Order Routing page** — drop it straight into your dApp.
+Get a free API key at **[fluidnative.com](https://fluidnative.com)**
 
-| Feature | Detail |
-|---|---|
-| **Network image logos** | Base · Ethereum · Solana · Injective — hosted image buttons, not emoji |
-| **25+ DEX venue logos** | Uniswap, Aerodrome, Curve, Odos, 1inch, Balancer, PancakeSwap, SushiSwap, Velodrome, KyberSwap, DODO, Bancor, Trader Joe, GMX, WOOFi, Hashflow, Maverick, Ambient, Clipper, OpenOcean + more |
-| **Live scanning animation** | 25-venue sweep carousel with per-venue logo images during routing |
-| **Best price auto-selected** | All venues queried simultaneously — best output highlighted with rank badges |
-| **Two-stage swap flow** | "Route via FluidSOR" → inspect routes → swipe-to-confirm execution |
-| **Swipe-to-confirm UX** | Drag gesture required before signing any on-chain transaction |
-| **Live balance card** | Token balances across all 4 networks — refreshes automatically after swap |
-| **Gas awareness** | Native gas balance check per network — warns if insufficient for execution |
-| **Multi-network quoting** | Base (25 venues) · Ethereum (Uniswap V3) · Solana (Jupiter) · Injective (Helix) |
-| **FluidSOR contract** | Calls `FluidSOR.sol` on Base mainnet — routes the swap to the winning venue |
-| **Split routing** | Order splitting across two venues to minimise slippage |
-| **Direct wallet signing** | viem + derived private key — no MetaMask popup, no wallet extension needed |
-| **Fluid Intelligence branding** | Matching header with Fluid logo + Fluid Intelligence subheading |
-| **Zero config** | Works out of the box after `npx @fluidwalletbase/sdk create` |
-
----
-
-## How the swap flow works
-
-```
-Developer enters amount
-        │
-        ▼
-[ Route via FluidSOR ]   ← FluidWalletClient.getQuote()
-        │                   25 venues scanned simultaneously with live animation
-        │
-        ▼
-  Ranked routes shown with venue logos:
-  🖼  Fluid AMM     100.11 USDT  ← BEST
-  🖼  Uniswap V3   100.08 USDT
-  🖼  Aerodrome    100.05 USDT
-        │
-        ▼  (user swipes to confirm)
-        │
-[ Execute Swap via Fluid AMM ]   ← viem signs ERC-20 approve + swap
-        │                           FluidSOR contract calls Fluid AMM on-chain
-        ▼
-  ✓ Swap confirmed — view on Basescan
-```
-
----
-
-## Environment variables
-
-```bash
-# .env.local  (auto-written by the CLI — gitignored)
-
-# Required for route fetching
-VITE_FLUID_API_KEY=fw_sor_...
-
-# Required for signing swaps (⚠ never commit this)
-VITE_FLUID_PRIVATE_KEY=0x...            # derived from seed phrase by CLI
-
-# Pre-filled — FluidSOR is live on Base mainnet
-VITE_FLUID_SOR_ADDRESS=0xF24daF8Fe15383fb438d48811E8c4b43749DafAE
-```
-
-Get your API key at [fluidnative.com → Developer Console → API Keys](https://fluidnative.com).
-
----
-
-## Project structure
-
-```
-my-swap-app/
-├── src/
-│   ├── main.tsx        # React root (no wallet provider needed)
-│   ├── App.tsx         # Header (Fluid logo + Fluid Intelligence branding) + footer
-│   ├── FluidSwap.tsx   # Swap widget — FluidWalletClient + viem signing
-│   ├── config.ts       # Network registry (with imgUrl), token registry, env vars
-│   └── index.css       # Base styles + routing animations
-├── index.html
-├── vite.config.ts
-├── tsconfig.json
-├── .env.local          # Your secrets (gitignored)
-└── .gitignore          # Auto-created — protects .env.local
-```
-
----
-
-## Using `@fluidwalletbase/wallet-endpoints` in your own project
-
-The scaffolded app uses this package internally. You can also install it standalone:
+### Install
 
 ```bash
 npm install @fluidwalletbase/wallet-endpoints
 ```
 
-```ts
+### Quote + Swap
+
+```js
 import { FluidWalletClient } from "@fluidwalletbase/wallet-endpoints";
 
-const client = new FluidWalletClient(
-  "https://fluidnative.com",
-  process.env.FLUID_API_KEY   // fw_sor_...
-);
+const client = new FluidWalletClient({ apiKey: "fk_your_key_here" });
 
-// Get USDC balance of your registered wallet
-const { balance } = await client.getBalance("base");
-// → "250.00"
+// Get a quote
+const quote = await client.quoteSwap({
+  fromToken: "USDC",
+  toToken:   "USDT",
+  amount:    "1000"
+});
 
-// Get ranked swap routes from all DEXs
-// Base: 25 venues · Solana: Jupiter · Ethereum: Uniswap V3 · Injective: Helix
-const quote = await client.getQuote("USDC", "USDT", "100", "base");
-const best  = quote.routes[0];
-// → { venue: "Fluid AMM", amountOut: "100.11", badge: "Best" }
+// Execute the swap
+const result = await client.swap({
+  fromToken: "USDC",
+  toToken:   "USDT",
+  amount:    "1000",
+  slippage:  "0.5"
+});
 
-// Relay a signed USDC send
-const result = await client.send({ chain: "base", to: "0x...", amount: "10", signedTx: "0x..." });
-
-// Relay a signed FluidSOR swap
-const result = await client.swap({ tokenIn: "USDC", tokenOut: "USDT", amountIn: "100", amountOut: best.amountOut, signedTx: "0x..." });
+console.log(result.txHash);
 ```
 
-See [wallet-endpoints README](./packages/wallet-endpoints/README.md) for signing examples.
+### Scaffold a full swap app
 
----
-
-## FluidSOR contract
-
-The swap widget calls **FluidSOR** deployed on Base mainnet:
-`0xF24daF8Fe15383fb438d48811E8c4b43749DafAE`
-
-Source: [`contracts/FluidSOR.sol`](https://github.com/fluidbase9/fluid-sor/blob/main/contracts/FluidSOR.sol)
-
-| Function | Venue |
-|---|---|
-| `swapViaFluid(...)` | Fluid Stable AMM (USDC ↔ USDT) |
-| `swapViaUniV3(...)` | Uniswap V3 pool |
-| `splitSwapFluidUniV3(...)` | Split order across both venues |
-
-FluidSOR selects the correct function based on the route returned by `getQuote()` — no manual selection needed.
-
----
-
-## Customising the swap widget
-
-### Change default slippage
-
-```ts
-// src/FluidSwap.tsx
-const [slippage, setSlippage] = useState(0.3); // 0.3%
-```
-
-### Use a custom RPC
-
-```ts
-// src/config.ts  (and src/FluidSwap.tsx)
-import { http } from "viem";
-const publicClient = createPublicClient({ chain: base, transport: http("https://your-rpc.com") });
+```bash
+npx @fluidwalletbase/sdk create my-swap-app
+cd my-swap-app
+npm install
+npm run dev
 ```
 
 ---
 
-## Resources
+## Key Metrics (from paper)
 
-| | |
-|---|---|
-| Website | [fluidnative.com](https://fluidnative.com) |
-| Developer Console | [fluidnative.com → Developer Console](https://fluidnative.com) |
-| GitHub | [github.com/fluidbase9/fluid-sor](https://github.com/fluidbase9/fluid-sor) |
-| npm — SDK | [npmjs.com/package/@fluidwalletbase/sdk](https://www.npmjs.com/package/@fluidwalletbase/sdk) |
-| npm — wallet-endpoints | [npmjs.com/package/@fluidwalletbase/wallet-endpoints](https://www.npmjs.com/package/@fluidwalletbase/wallet-endpoints) |
-| Issues | [github.com/fluidbase9/fluid-sor/issues](https://github.com/fluidbase9/fluid-sor/issues) |
+| Metric | Value |
+|--------|-------|
+| Route discovery (warm cache) | **47.5 ms** |
+| End-to-end latency | **~280 ms** |
+| Price improvement | **+2.4 bps** vs single venue |
+| REI score (stablecoin) | **0.9994** |
+| REI score (volatile) | **0.9982** |
+| Bellman-Ford convergence | **<50 ms** (\|V\|≈200, \|E\|≈1500) |
+| Agent throughput | **10²–10³ intents/min** |
+| Venues | **18+ DEXs** across 4 chains |
+| MEV protection | **88% detection**, 95% prevention |
+
+---
+
+## Research Dataset
+
+265,000-row simulation dataset validating all paper metrics.
+
+📊 **Kaggle:** [kaggle.com/datasets/abhijeethganji9/ganji-defi-sor-protocol](https://www.kaggle.com/datasets/abhijeethganji9/ganji-defi-sor-protocol)
 
 ---
 
 ## License
 
-MIT © [Fluid Wallet](https://fluidnative.com)
+MIT — free to use, modify, and distribute.
