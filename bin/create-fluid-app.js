@@ -475,6 +475,30 @@ async function runModeScaffoldDev() {
   log(`    ${C.cyan}npm run dev${C.reset}`);
   log(`    ${C.dim}# → http://localhost:5173${C.reset}`);
   log("");
+
+  // ── Auto-open browser after short delay, then start dev server ───────────
+  const { spawn } = require("child_process");
+  const openCmd   = process.platform === "darwin" ? "open"
+                  : process.platform === "win32"  ? "start"
+                  : "xdg-open";
+
+  setTimeout(() => {
+    spawn(openCmd, ["http://localhost:5173"], { detached: true, stdio: "ignore" }).unref();
+  }, 2000);
+
+  log(`  ${C.dim}Starting dev server and opening browser…${C.reset}\n`);
+
+  // cd into project and run dev server (takes over the terminal)
+  const dev = spawn(detectPm() === "npm" ? "npm" : detectPm(), ["run", "dev"], {
+    cwd:   projectPath,
+    stdio: "inherit",
+    shell: true,
+  });
+
+  dev.on("error", () => {
+    warn(`Could not start dev server automatically.`);
+    log(`  Run manually:  ${C.cyan}cd ${projectName} && npm run dev${C.reset}\n`);
+  });
 }
 
 // ─── Mode b: Install SOR in existing project for developers ───────────────────
