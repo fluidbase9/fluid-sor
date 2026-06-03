@@ -244,7 +244,7 @@ function RouteCard({ route, toSym, selected, onClick, rank }: {
     .replace("Fluid AMM + Uni V3","Fluid Split").replace("Velodrome V2","Velodrome");
 
   return (
-    <button onClick={onClick} style={{ position: "relative", textAlign: "left", padding: "0.65rem 0.6rem 0.55rem", borderRadius: 10, border: selected ? `1.5px solid ${color}88` : isBest ? `1px solid ${color}44` : "1px solid #1f1f1f", background: selected ? color + "12" : isBest ? color + "08" : "#0d0d0d", cursor: "pointer", width: "100%", transition: "all 0.15s", display: "flex", flexDirection: "column", gap: "0.3rem", minHeight: 80 }}>
+    <button onClick={onClick} style={{ position: "relative", textAlign: "left", padding: "0.65rem 0.6rem 0.55rem", borderRadius: 10, border: selected ? `1.5px solid ${color}88` : isBest ? `1px solid ${color}44` : "1px solid #e2e2ea", background: selected ? color + "12" : isBest ? color + "08" : "#f8f8fc", cursor: "pointer", width: "100%", transition: "all 0.15s", display: "flex", flexDirection: "column", gap: "0.3rem", minHeight: 80 }}>
       <span style={{ position: "absolute", top: 5, right: 5, background: rankColor + "22", border: `1px solid ${rankColor}55`, color: rankColor, borderRadius: 4, fontSize: "0.48rem", fontWeight: 800, padding: "0.1rem 0.3rem", letterSpacing: "0.05em", textTransform: "uppercase" }}>{rankLabel}</span>
       <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
         {logo ? (
@@ -330,7 +330,7 @@ function RoutingAnimation({ fromSym, toSym, scanning, routes }: {
           const matchedRoute = routes.find(r => r.venue.includes(v.key));
           const isBest = !scanning && matchedRoute && routes[0]?.venue === matchedRoute.venue;
           return (
-            <div key={v.key} className="fsw-scanning-venue" style={{ animationDelay: `${i * 0.04}s`, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "0.5rem", padding: "0.75rem 0.65rem", borderRadius: 10, minHeight: 90, background: isBest ? "#4ade8010" : "#0d0d0d", border: isBest ? "1px solid #4ade8044" : `1px solid ${v.color}28`, transition: "background 0.3s,border 0.3s" }}>
+            <div key={v.key} className="fsw-scanning-venue" style={{ animationDelay: `${i * 0.04}s`, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "0.5rem", padding: "0.75rem 0.65rem", borderRadius: 10, minHeight: 90, background: isBest ? "#f0fdf4" : "#f8f8fc", border: isBest ? "1px solid #4ade8044" : `1px solid #e2e2ea`, transition: "background 0.3s,border 0.3s" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
                 {v.logo ? (
                   <img src={v.logo} alt={v.label} style={{ width: 16, height: 16, borderRadius: 4, objectFit: "cover", flexShrink: 0 }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
@@ -870,7 +870,7 @@ export default function FluidSwapWidget({ onRouteFound, previewMode = false, ini
                   style={{
                     flex: 1, padding: "0.4rem 0.15rem", borderRadius: 10,
                     border: isSelected ? "1.5px solid #f9731688" : "1px solid #1f2937",
-                    background: isSelected ? "linear-gradient(135deg, #f9731618 0%, #fb923c12 100%)" : "#0d0d0d",
+                    background: isSelected ? "linear-gradient(135deg, #f9731618 0%, #fb923c12 100%)" : "#f5f5f8",
                     cursor: "pointer", display: "flex", flexDirection: "column" as const, alignItems: "center", gap: "0.25rem",
                     boxShadow: isSelected ? "0 0 10px #f9731628, inset 0 0 8px #f9731610" : "none",
                     transition: "all 0.15s ease",
@@ -892,7 +892,7 @@ export default function FluidSwapWidget({ onRouteFound, previewMode = false, ini
                   style={{
                     flex: 1, padding: "0.4rem 0.15rem", borderRadius: 10,
                     border: isSelected ? "1.5px solid #2dd4bf88" : "1px solid #1f2937",
-                    background: isSelected ? "linear-gradient(135deg, #2dd4bf18 0%, #06b6d412 100%)" : "#0d0d0d",
+                    background: isSelected ? "linear-gradient(135deg, #2dd4bf18 0%, #06b6d412 100%)" : "#f5f5f8",
                     cursor: "pointer", display: "flex", flexDirection: "column" as const, alignItems: "center", gap: "0.25rem",
                     boxShadow: isSelected ? "0 0 10px #2dd4bf28, inset 0 0 8px #2dd4bf10" : "none",
                     transition: "all 0.15s ease",
@@ -1084,9 +1084,9 @@ export default function FluidSwapWidget({ onRouteFound, previewMode = false, ini
             <div style={{ display: "flex", gap: "0.3rem", flex: 1 }}>
               {NETWORKS.map(net => (
                 <button key={net.id} onClick={() => handleNetworkChange(net.id)} title={net.label}
-                  style={{ flex: 1, padding: "0.35rem 0.15rem 0.4rem", borderRadius: 10, border: network === net.id ? `1.5px solid ${net.color}88` : "1px solid #1f1f1f", background: network === net.id ? net.color + "15" : "#0d0d0d", cursor: "pointer", transition: "all 0.15s", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.2rem" }}>
-                  <img src={net.imgUrl} alt={net.label} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", opacity: network === net.id ? 1 : 0.45, transition: "opacity 0.15s" }} />
-                  <span style={{ fontSize: "0.58rem", fontWeight: 700, color: network === net.id ? net.color : "#4b5563", letterSpacing: "0.02em" }}>{net.label}</span>
+                  style={{ flex: 1, padding: "0.35rem 0.15rem 0.4rem", borderRadius: 10, border: network === net.id ? `1.5px solid ${net.color}88` : "1px solid #e2e2ea", background: network === net.id ? net.color + "15" : "#f5f5f8", cursor: "pointer", transition: "all 0.15s", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.2rem" }}>
+                  <img src={net.imgUrl} alt={net.label} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", opacity: network === net.id ? 1 : 0.55, transition: "opacity 0.15s" }} />
+                  <span style={{ fontSize: "0.58rem", fontWeight: 700, color: network === net.id ? net.color : "#6b7280", letterSpacing: "0.02em" }}>{net.label}</span>
                 </button>
               ))}
             </div>
@@ -1097,9 +1097,9 @@ export default function FluidSwapWidget({ onRouteFound, previewMode = false, ini
             <div style={{ display: "flex", gap: "0.3rem", flex: 1 }}>
               {NETWORKS.map(net => (
                 <button key={net.id} onClick={() => handleToNetworkChange(net.id)} title={net.label}
-                  style={{ flex: 1, padding: "0.35rem 0.15rem 0.4rem", borderRadius: 10, border: toNetwork === net.id ? `1.5px solid ${net.color}88` : "1px solid #1f1f1f", background: toNetwork === net.id ? net.color + "15" : "#0d0d0d", cursor: "pointer", transition: "all 0.15s", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.2rem" }}>
-                  <img src={net.imgUrl} alt={net.label} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", opacity: toNetwork === net.id ? 1 : 0.45, transition: "opacity 0.15s" }} />
-                  <span style={{ fontSize: "0.58rem", fontWeight: 700, color: toNetwork === net.id ? net.color : "#4b5563", letterSpacing: "0.02em" }}>{net.label}</span>
+                  style={{ flex: 1, padding: "0.35rem 0.15rem 0.4rem", borderRadius: 10, border: toNetwork === net.id ? `1.5px solid ${net.color}88` : "1px solid #e2e2ea", background: toNetwork === net.id ? net.color + "15" : "#f5f5f8", cursor: "pointer", transition: "all 0.15s", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.2rem" }}>
+                  <img src={net.imgUrl} alt={net.label} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", opacity: toNetwork === net.id ? 1 : 0.55, transition: "opacity 0.15s" }} />
+                  <span style={{ fontSize: "0.58rem", fontWeight: 700, color: toNetwork === net.id ? net.color : "#6b7280", letterSpacing: "0.02em" }}>{net.label}</span>
                 </button>
               ))}
             </div>
@@ -1722,7 +1722,7 @@ export default function FluidSwapWidget({ onRouteFound, previewMode = false, ini
                 </div>
                 <div style={{ background: "#f8717108", border: "1px solid #f8717133", borderRadius: 12, padding: "0.75rem", fontSize: "0.78rem", color: "#f87171" }}>{execResult.error}</div>
                 <div style={{ display: "flex", gap: "0.6rem" }}>
-                  <button onClick={() => setExecModal(null)} style={{ flex: 1, padding: "0.75rem", borderRadius: 12, border: "1px solid #2a2a2a", background: "#0d0d0d", color: "#6b7280", fontWeight: 600, cursor: "pointer", fontSize: "0.875rem" }}>Close</button>
+                  <button onClick={() => setExecModal(null)} style={{ flex: 1, padding: "0.75rem", borderRadius: 12, border: "1px solid #e2e2ea", background: "#f5f5f8", color: "#6b7280", fontWeight: 600, cursor: "pointer", fontSize: "0.875rem" }}>Close</button>
                   <button onClick={() => { setSwipeX(0); setExecModal("confirm"); }} style={{ flex: 1, padding: "0.75rem", borderRadius: 12, border: "none", background: "#1e293b", color: "#94a3b8", fontWeight: 600, cursor: "pointer", fontSize: "0.875rem" }}>Try Again</button>
                 </div>
               </>
