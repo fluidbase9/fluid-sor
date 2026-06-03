@@ -363,13 +363,13 @@ async function stepECKeyPair(email) {
     await apiPost("https://fluidnative.com/api/developer/fldp-keys/register", {
       email, keyName, publicKeyPem, label: "CLI Generated",
     });
-    ok("FLDP EC key pair registered");
+    ok("Miller's Key pair registered");
   } catch { warn("Could not register EC key online — saved locally"); }
 
   log("");
   log(hr());
   log("");
-  warn(`${C.bold}${C.yellow}SHOWN ONCE — save your FLDP key NOW. It will not be shown again.${C.reset}`);
+  warn(`${C.bold}${C.yellow}SHOWN ONCE — save your Miller's Key NOW. It will not be shown again.${C.reset}`);
   log("");
   label("FLDP_KEY_NAME",    `${C.cyan}${keyName}${C.reset}`);
   label("FLDP_PRIVATE_KEY", `${C.yellow}(shown below)${C.reset}`);
@@ -379,7 +379,7 @@ async function stepECKeyPair(email) {
   log("");
   log(hr());
   log("");
-  await pressEnter("I have saved my FLDP key");
+  await pressEnter("I have saved my Miller's Key");
 
   return { keyName, privateKeyJson };
 }
@@ -429,7 +429,7 @@ async function runModeScaffoldDev() {
   step(2, TOTAL_STEPS, "Fluid API key  (fw_sor_...)  · auto-generated");
   const apiKey = await stepApiKey(email);
 
-  step(3, TOTAL_STEPS, "FLDP EC key pair  (P-256)  · auto-generated");
+  step(3, TOTAL_STEPS, "Miller's Key pair  (P-256)  · auto-generated");
   const { keyName, privateKeyJson } = await stepECKeyPair(email);
 
   step(4, TOTAL_STEPS, "Wallet seed phrase  (BIP-39, 12 words)  · auto-generated");
