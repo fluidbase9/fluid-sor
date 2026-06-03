@@ -134,27 +134,37 @@ function TickerBar() {
       }).catch(() => {});
   }, []);
 
-  const items = [...TICKERS, ...TICKERS]; // doubled for seamless scroll
+  // Triple the items — animation moves exactly 1/3 so the loop is seamless with no gap
+  const items = [...TICKERS, ...TICKERS, ...TICKERS];
+
+  const renderItem = (t: typeof TICKERS[0], i: number) => {
+    const p = prices[t.sym];
+    const up = (p?.change ?? 0) >= 0;
+    return (
+      <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 24px", fontSize: 11, fontFamily: "monospace", color: "#9ca3af", flexShrink: 0 }}>
+        <span style={{ color: "#fff", fontWeight: 700 }}>{t.sym}</span>
+        <span>{p ? `$${p.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}</span>
+        {p && <span style={{ color: up ? "#4ade80" : "#f87171" }}>{up ? "+" : ""}{p.change.toFixed(2)}%</span>}
+        <span style={{ color: "#222", marginLeft: 4 }}>·</span>
+      </span>
+    );
+  };
 
   return (
     <div style={{ background: "#000", borderBottom: "1px solid #111", overflow: "hidden", whiteSpace: "nowrap" }}>
       <style>{`
-        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        .ticker-track { display: inline-flex; animation: ticker 20s linear infinite; }
-        .ticker-track:hover { animation-play-state: paused; }
+        @keyframes ticker {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-33.333%); }
+        }
+        .ticker-track {
+          display: inline-flex;
+          animation: ticker 18s linear infinite;
+          will-change: transform;
+        }
       `}</style>
       <div className="ticker-track">
-        {items.map((t, i) => {
-          const p = prices[t.sym];
-          const up = (p?.change ?? 0) >= 0;
-          return (
-            <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 20px", fontSize: 11, fontFamily: "monospace", color: "#9ca3af", borderRight: "1px solid #111" }}>
-              <span style={{ color: "#fff", fontWeight: 700 }}>{t.sym}</span>
-              <span>{p ? `$${p.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}</span>
-              {p && <span style={{ color: up ? "#4ade80" : "#f87171" }}>{up ? "+" : ""}{p.change.toFixed(2)}%</span>}
-            </span>
-          );
-        })}
+        {items.map((t, i) => renderItem(t, i))}
       </div>
     </div>
   );
