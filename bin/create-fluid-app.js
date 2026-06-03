@@ -32,7 +32,7 @@ const step = (n, total, msg) => log(`\n  ${C.bold}[${n}/${total}]${C.reset} ${ms
 function banner() {
   log("");
   log(`${C.cyan}${C.bold}  ╔══════════════════════════════════════════╗${C.reset}`);
-  log(`${C.cyan}${C.bold}  ║   @fluidwalletbase/sor · create-fluid-app   ║${C.reset}`);
+  log(`${C.cyan}${C.bold}  ║   fluid-sor · create-fluid-app   ║${C.reset}`);
   log(`${C.cyan}${C.bold}  ║   Smart Order Routing on Base Mainnet    ║${C.reset}`);
   log(`${C.cyan}${C.bold}  ╚══════════════════════════════════════════╝${C.reset}`);
   log(`  ${C.gray}Powered by FluidSOR · fluidnative.com${C.reset}`);
@@ -47,7 +47,7 @@ function getProjectName() {
   const name     = filtered[0];
   if (!name) {
     err("Please provide a project name:");
-    log(`    npx @fluidwalletbase/sor create ${C.cyan}my-swap-app${C.reset}`);
+    log(`    npx fluid-sor create ${C.cyan}my-swap-app${C.reset}`);
     log("");
     process.exit(1);
   }
@@ -225,7 +225,7 @@ async function main() {
   }
 
   if (!fs.existsSync(templateDir)) {
-    err("Template files missing. Please reinstall @fluidwalletbase/sor.");
+    err("Template files missing. Please reinstall fluid-sor.");
     process.exit(1);
   }
 

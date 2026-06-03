@@ -28,7 +28,7 @@
 ## Quick start
 
 ```bash
-npx @fluidwalletbase/sor create my-swap-app
+npx fluid-sor create my-swap-app
 ```
 
 The CLI will interactively ask for:
