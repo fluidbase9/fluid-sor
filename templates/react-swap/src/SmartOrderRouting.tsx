@@ -169,7 +169,7 @@ function TickerBar() {
   };
 
   return (
-    <div style={{ background: T.cardBg2, borderBottom: `1px solid ${T.border}`, overflow: "hidden", whiteSpace: "nowrap" }}>
+    <div style={{ background: "#080810", borderBottom: `1px solid #1a1a26`, overflow: "hidden", whiteSpace: "nowrap" }}>
       <style>{`
         @keyframes ticker {
           0%   { transform: translateX(0); }

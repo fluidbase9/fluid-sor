@@ -158,16 +158,16 @@ const VENUES_SCAN = [
 
 const S = {
   card: {
-    background: "#0a0a0a", border: "1px solid #1f1f1f",
+    background: "#ffffff", border: "1px solid #e2e2ea",
     borderRadius: 20, padding: "1.5rem",
     display: "flex", flexDirection: "column" as const, gap: "1rem",
   } as React.CSSProperties,
   inputBox: {
-    background: "#111", border: "1px solid #1f1f1f", borderRadius: 14,
+    background: "#f5f5f8", border: "1px solid #e2e2ea", borderRadius: 14,
     padding: "0.9rem 1rem", display: "flex", alignItems: "center", gap: "0.75rem",
   } as React.CSSProperties,
   inputNum: {
-    flex: 1, background: "transparent", border: "none", color: "#fff",
+    flex: 1, background: "transparent", border: "none", color: "#0f0f14",
     fontSize: "1.4rem", fontWeight: 700, width: "100%", outline: "none",
   } as React.CSSProperties,
   tokenBtn: (color: string): React.CSSProperties => ({
@@ -178,8 +178,8 @@ const S = {
   }),
   btn: (color: string, disabled?: boolean): React.CSSProperties => ({
     width: "100%", padding: "0.95rem", borderRadius: 14, border: "none",
-    background: disabled ? "#1a1a1a" : color,
-    color: disabled ? "#374151" : "#fff",
+    background: disabled ? "#e8e8f0" : color,
+    color: disabled ? "#9ca3af" : "#fff",
     fontWeight: 700, fontSize: "1rem",
     cursor: disabled ? "not-allowed" : "pointer", transition: "all 0.15s",
   }),
@@ -191,8 +191,8 @@ const S = {
   flipBtn: {
     display: "flex", alignItems: "center", justifyContent: "center",
     width: 34, height: 34, borderRadius: "50%",
-    background: "#151515", border: "1px solid #2a2a2a",
-    cursor: "pointer", margin: "0 auto", color: "#4b5563", fontSize: "1.1rem",
+    background: "#e8e8f0", border: "1px solid #d0d0dc",
+    cursor: "pointer", margin: "0 auto", color: "#6b7280", fontSize: "1.1rem",
   } as React.CSSProperties,
 };
 
@@ -1001,7 +1001,7 @@ export default function FluidSwapWidget({ onRouteFound, previewMode = false, ini
       <div style={S.card}>
 
         {/* ── Identity card — always visible ── */}
-        <div style={{ background: "#070b10", border: "1px solid #1a2535", borderRadius: 14, padding: "0.75rem 1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        <div style={{ background: "#f5f5f8", border: "1px solid #e2e2ea", borderRadius: 14, padding: "0.75rem 1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             {/* Fluid ID */}
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <div style={{ width: 7, height: 7, borderRadius: "50%", background: currentUser ? "#a78bfa" : "#374151", flexShrink: 0 }} />
@@ -1111,7 +1111,7 @@ export default function FluidSwapWidget({ onRouteFound, previewMode = false, ini
         </div>
 
         {/* Wallet balance card — always visible */}
-        <div style={{ background: "#0d1117", border: `1px solid ${networkMeta.color}28`, borderRadius: 12, padding: "0.65rem 1rem", display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+        <div style={{ background: "#f5f5f8", border: `1px solid #e2e2ea`, borderRadius: 12, padding: "0.65rem 1rem", display: "flex", flexDirection: "column", gap: "0.35rem" }}>
           {!currentUser && (
             <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", paddingBottom: "0.35rem" }}>
               <img src={networkMeta.imgUrl} alt={networkMeta.label} style={{ width: 14, height: 14, borderRadius: "50%", objectFit: "cover" }} />
@@ -1155,7 +1155,7 @@ export default function FluidSwapWidget({ onRouteFound, previewMode = false, ini
             </div>
 
             {/* Divider */}
-            <div style={{ height: 1, background: "#1a1a1a", margin: "0 -0.25rem" }} />
+            <div style={{ height: 1, background: "#e2e2ea", margin: "0 -0.25rem" }} />
 
             {/* Token rows */}
             {walletBalLoading && (
