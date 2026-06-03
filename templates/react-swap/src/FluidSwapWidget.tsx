@@ -1110,9 +1110,31 @@ export default function FluidSwapWidget({ onRouteFound, previewMode = false, ini
           )}
         </div>
 
-        {/* Wallet balance card */}
-        {currentUser && (
-          <div style={{ background: "#0d1117", border: `1px solid ${networkMeta.color}28`, borderRadius: 12, padding: "0.65rem 1rem", display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+        {/* Wallet balance card — always visible */}
+        <div style={{ background: "#0d1117", border: `1px solid ${networkMeta.color}28`, borderRadius: 12, padding: "0.65rem 1rem", display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+          {!currentUser && (
+            <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", paddingBottom: "0.35rem" }}>
+              <img src={networkMeta.imgUrl} alt={networkMeta.label} style={{ width: 14, height: 14, borderRadius: "50%", objectFit: "cover" }} />
+              <span style={{ fontSize: "0.65rem", color: networkMeta.color, fontWeight: 700 }}>{networkMeta.label}</span>
+              <span style={{ fontSize: "0.6rem", color: "#4b5563" }}>· Wallet Balance</span>
+              <span style={{ marginLeft: "auto", fontSize: "0.7rem", color: "#374151" }}>Set .env.local to load balance</span>
+            </div>
+          )}
+          {!currentUser && ["ETH","USDC","USDT"].map(tok => {
+            const tokenColor = TOKENS_BY_NETWORK[network]?.[tok]?.color ?? "#6b7280";
+            return (
+              <div key={tok} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.2rem 0.1rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  <div style={{ width: 22, height: 22, borderRadius: "50%", background: tokenColor + "22", border: `1px solid ${tokenColor}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <span style={{ fontSize: "0.55rem", fontWeight: 800, color: tokenColor }}>{tok.slice(0, 2)}</span>
+                  </div>
+                  <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "#4b5563" }}>{tok}</span>
+                </div>
+                <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#4b5563", fontFamily: "monospace" }}>0.00</span>
+              </div>
+            );
+          })}
+          {currentUser && <>
 
             {/* Header: network name + total USD */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.1rem" }}>
@@ -1219,8 +1241,8 @@ export default function FluidSwapWidget({ onRouteFound, previewMode = false, ini
                 )}
               </div>
             )}
-          </div>
-        )}
+          </>}
+        </div>
 
         {/* Two-column layout in preview mode, single column otherwise */}
         <div style={previewMode ? { display: "flex", gap: "1rem", alignItems: "flex-start" } : { display: "contents" }}>
