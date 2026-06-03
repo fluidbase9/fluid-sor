@@ -86,25 +86,27 @@ function shortenAddress(addr: string) {
 
 // ─── Inline Card / Badge components ──────────────────────────────────────────
 
-// ─── Theme tokens — light grey page, white cards ──────────────────────────────
+// ─── Theme tokens — dark charcoal page (Wallet for Agents grey) + white cards ─
 const T = {
-  pageBg:    "#e8e8ef",        // light grey page background
+  pageBg:    "#0d0d12",        // dark charcoal grey — same as landing page
   cardBg:    "#ffffff",        // white cards
-  cardBg2:   "#f8f8fc",        // off-white secondary card
-  border:    "#d8d8e4",        // soft grey border
-  border2:   "#e0e0ea",        // lighter border
-  textPrime: "#0f0f14",        // near-black text
-  textSec:   "#5a6072",        // medium grey secondary
-  textDim:   "#9ba3b8",        // dim grey
-  accent:    "#0ea5e9",        // sky blue accent
-  accentOr:  "#f59e0b",        // amber
+  cardBg2:   "#f5f5f8",        // off-white ticker / secondary
+  border:    "#e2e2ea",        // card border (light, inside white cards)
+  border2:   "#1a1a22",        // page-level border (dark)
+  textPrime: "#ffffff",        // white — for headings on dark page bg
+  textSec:   "#94a3b8",        // slate — subtitles on dark bg
+  textDim:   "#4b5563",        // dim — tertiary on dark bg
+  textCard:  "#0f0f14",        // near-black — text inside white cards
+  textCardSec: "#5a6072",      // grey — secondary inside white cards
+  accent:    "#22d3ee",        // teal
+  accentOr:  "#f59e0b",
   green:     "#16a34a",
   red:       "#dc2626",
 };
 
 function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div style={{ background: T.cardBg, border: `1px solid ${T.border}`, borderRadius: 14, ...style }}>
+    <div style={{ background: T.cardBg, border: `1px solid ${T.border}`, borderRadius: 14, boxShadow: "0 2px 12px rgba(0,0,0,0.18)", ...style }}>
       {children}
     </div>
   );
@@ -116,7 +118,7 @@ function CardHeader({ children }: { children: React.ReactNode }) {
   return <div style={{ padding: "1rem 1.25rem 0" }}>{children}</div>;
 }
 function CardTitle({ children }: { children: React.ReactNode }) {
-  return <div style={{ color: T.textPrime, fontWeight: 600, fontSize: "0.875rem", letterSpacing: "0.01em", marginBottom: "0.75rem" }}>{children}</div>;
+  return <div style={{ color: T.textCard, fontWeight: 600, fontSize: "0.875rem", letterSpacing: "0.01em", marginBottom: "0.75rem" }}>{children}</div>;
 }
 function Badge({ children, color = "#22d3ee" }: { children: React.ReactNode; color?: string }) {
   return (
@@ -207,7 +209,7 @@ export default function SmartOrderRouting() {
       <TickerBar />
 
       {/* Page label */}
-      <div style={{ textAlign: "center", padding: "14px 0 0", fontSize: 10, fontWeight: 700, letterSpacing: "0.28em", textTransform: "uppercase", color: "#6366f1" }}>
+      <div style={{ textAlign: "center", padding: "14px 0 0", fontSize: 10, fontWeight: 700, letterSpacing: "0.28em", textTransform: "uppercase", color: "#818cf8" }}>
         Smart Order Routing
       </div>
 
@@ -217,14 +219,14 @@ export default function SmartOrderRouting() {
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 10, paddingTop: 28 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
             <img src="https://fluidspot.s3.us-east-2.amazonaws.com/web/Base/media_files/fluid23.png" alt="Fluid SOR" style={{ width: 64, height: 64, objectFit: "contain", borderRadius: 12 }} />
-            <h1 style={{ fontWeight: 800, fontSize: "3.5rem", lineHeight: 1.1, margin: 0, color: T.textPrime, letterSpacing: "-0.02em" }}>Smart Order Routing</h1>
+            <h1 style={{ fontWeight: 800, fontSize: "3.5rem", lineHeight: 1.1, margin: 0, color: "#ffffff", letterSpacing: "-0.02em" }}>Smart Order Routing</h1>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 600, fontStyle: "italic", fontSize: "1.05rem", color: T.textSec }}>
             <span>[ Integrated in Fluid Wallet ] -</span>
             <img src="https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/fluid_intelliegence.png" alt="Fluid Intelligence" style={{ height: 18, objectFit: "contain" }} />
             <span style={{ color: T.accent }}>Fluid Intelligence</span>
           </div>
-          <p style={{ fontStyle: "italic", fontSize: "0.95rem", color: T.textDim, margin: 0 }}>
+          <p style={{ fontStyle: "italic", fontSize: "0.95rem", color: "#4b5563", margin: 0 }}>
             ( Fluid SOR - DeFi Protocol delivering Best Prices and Minimal Slippage in Swaps and Perpetual Trading )
           </p>
         </div>
@@ -234,30 +236,30 @@ export default function SmartOrderRouting() {
           <FluidSwapWidget />
         </div>
 
-        {/* FluidSOR contract badge */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: T.textDim, background: T.cardBg, borderRadius: 12, padding: "10px 16px", border: `1px solid ${T.border}`, flexWrap: "wrap" }}>
-          <span style={{ color: T.textDim }}>FluidSOR:</span>
+        {/* FluidSOR contract badge — white card */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: T.textCardSec, background: T.cardBg, borderRadius: 12, padding: "10px 16px", border: `1px solid ${T.border}`, flexWrap: "wrap", boxShadow: "0 2px 12px rgba(0,0,0,0.18)" }}>
+          <span style={{ color: T.textCardSec }}>FluidSOR:</span>
           <a href={`https://basescan.org/address/${FLUID_SOR_ADDRESS}`} target="_blank" rel="noopener noreferrer" style={{ color: T.accent, fontFamily: "monospace", textDecoration: "none" }}>
             {shortenAddress(FLUID_SOR_ADDRESS)}
           </a>
-          <button onClick={copyAddress} style={{ background: "none", border: "none", cursor: "pointer", color: copied ? T.green : T.textDim, display: "flex" }}>
+          <button onClick={copyAddress} style={{ background: "none", border: "none", cursor: "pointer", color: copied ? T.green : T.textCardSec, display: "flex" }}>
             {copied ? <IconCheck /> : <IconCopy />}
           </button>
           <span style={{ marginLeft: "auto" }}><Badge color={T.accent}>Base Mainnet</Badge></span>
         </div>
 
-        {/* Feature cards */}
+        {/* Feature cards — white on dark page */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
           {FEATURES.map((f, i) => (
             <Card key={i}>
               <CardContent>
                 <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-                  <div style={{ padding: 8, borderRadius: 10, background: T.pageBg, border: `1px solid ${T.border}`, flexShrink: 0 }}>
+                  <div style={{ padding: 8, borderRadius: 10, background: "#f0f4ff", border: `1px solid ${T.border}`, flexShrink: 0 }}>
                     {f.icon}
                   </div>
                   <div>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: T.textPrime, margin: "0 0 4px" }}>{f.title}</p>
-                    <p style={{ fontSize: 12, color: T.textSec, margin: 0, lineHeight: 1.65 }}>{f.description}</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: T.textCard, margin: "0 0 4px" }}>{f.title}</p>
+                    <p style={{ fontSize: 12, color: T.textCardSec, margin: 0, lineHeight: 1.65 }}>{f.description}</p>
                   </div>
                 </div>
               </CardContent>
@@ -265,30 +267,30 @@ export default function SmartOrderRouting() {
           ))}
         </div>
 
-        {/* SDK promo */}
+        {/* SDK promo — white card */}
         <Card>
           <CardContent>
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
               <div>
-                <p style={{ fontSize: 13, fontWeight: 600, color: T.textPrime, display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px" }}>
+                <p style={{ fontSize: 13, fontWeight: 600, color: T.textCard, display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px" }}>
                   <IconZap /> Build with Fluid SOR
                 </p>
-                <p style={{ fontSize: 12, color: T.textSec, maxWidth: 400, lineHeight: 1.65, margin: "0 0 14px" }}>
+                <p style={{ fontSize: 12, color: T.textCardSec, maxWidth: 400, lineHeight: 1.65, margin: "0 0 14px" }}>
                   Embed FluidSOR in your own dApp using <code style={{ color: T.accent, fontFamily: "monospace" }}>fluid-sor</code>. One command scaffolds a swap interface with wallet connection.
                 </p>
-                <div style={{ background: T.pageBg, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 16px", fontFamily: "monospace", fontSize: 13, color: T.green, display: "inline-block" }}>
+                <div style={{ background: "#f5f5f8", border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 16px", fontFamily: "monospace", fontSize: 13, color: "#16a34a", display: "inline-block" }}>
                   npx fluid-sor create my-swap-app
                 </div>
               </div>
               <a href="https://fluidnative.com" target="_blank" rel="noopener noreferrer"
-                style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, background: "#4c1d9518", border: "1px solid #7c3aed28", color: "#a78bfa", fontSize: 13, fontWeight: 500, textDecoration: "none", alignSelf: "flex-start" }}>
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, background: "#ede9fe", border: "1px solid #c4b5fd", color: "#7c3aed", fontSize: 13, fontWeight: 500, textDecoration: "none", alignSelf: "flex-start" }}>
                 fluidnative.com <IconExternalLink />
               </a>
             </div>
           </CardContent>
         </Card>
 
-        {/* Supported stablecoins */}
+        {/* Supported stablecoins — white card */}
         <Card>
           <CardHeader><CardTitle>Supported Stablecoins by Network</CardTitle></CardHeader>
           <CardContent>
@@ -296,21 +298,21 @@ export default function SmartOrderRouting() {
               {NETWORKS.map(net => (
                 <div key={net.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <img src={net.icon} alt={net.displayName} style={{ width: 16, height: 16, borderRadius: 4, objectFit: "contain", flexShrink: 0 }} />
-                  <span style={{ fontSize: 12, color: T.textSec, width: 112, flexShrink: 0 }}>{net.displayName}</span>
+                  <span style={{ fontSize: 12, color: T.textCardSec, width: 112, flexShrink: 0 }}>{net.displayName}</span>
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                     {net.stablecoins.map(c => (
                       <span key={c.symbol} style={{
                         padding: "2px 8px", borderRadius: 999, fontSize: 11,
-                        background: net.id === "base" ? T.accent + "18" : T.pageBg,
-                        border: `1px solid ${net.id === "base" ? T.accent + "30" : T.border}`,
-                        color: net.id === "base" ? T.accent : T.textSec,
+                        background: net.id === "base" ? T.accent + "15" : "#f5f5f8",
+                        border: `1px solid ${net.id === "base" ? T.accent + "40" : T.border}`,
+                        color: net.id === "base" ? T.accent : T.textCardSec,
                         fontWeight: net.id === "base" ? 600 : 400,
                       }}>
                         {c.symbol}
                       </span>
                     ))}
                   </div>
-                  <span style={{ fontSize: 12, marginLeft: "auto", color: net.id === "base" ? T.accent : T.textDim, fontWeight: net.id === "base" ? 600 : 400 }}>
+                  <span style={{ fontSize: 12, marginLeft: "auto", color: net.id === "base" ? T.accent : "#aab4c8", fontWeight: net.id === "base" ? 600 : 400 }}>
                     {net.id === "base" ? "SOR live" : "coming soon"}
                   </span>
                 </div>
