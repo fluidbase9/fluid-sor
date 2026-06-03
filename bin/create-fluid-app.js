@@ -162,118 +162,19 @@ function promptHidden(question) {
   });
 }
 
-// ─── Interactive API key prompt (two paths: generate inline OR paste) ────────
+// ─── API key prompt (direct paste — get from fluidnative.com) ────────────────
 
 async function promptApiKey() {
-  log(`  ${C.bold}Fluid SDK API Key${C.reset}`);
-  log(`  ${C.gray}Gates access to the SOR quote endpoint (live DEX price indexing).${C.reset}`);
-  log("");
-  log(`  ${C.cyan}?${C.reset} How would you like to set up your API key?`);
-  log(`  ${C.gray}  1${C.reset}  Generate a new key right now ${C.green}(recommended)${C.reset}`);
-  log(`  ${C.gray}  2${C.reset}  Paste an existing key from the dashboard`);
-  log(`  ${C.dim}     (dashboard: fluidnative.com → Developer Console → API Keys)${C.reset}`);
-  log("");
-
-  while (true) {
-    const choice = await prompt(`  ${C.cyan}?${C.reset} Enter 1 or 2: `);
-    if (choice === "1") return generateApiKeyInTerminal();
-    if (choice === "2") return pasteApiKeyFromDashboard();
-    err("Please enter 1 or 2.");
-  }
-}
-
-// ─── Option 1: Generate key inline in terminal ────────────────────────────────
-
-async function generateApiKeyInTerminal() {
-  log("");
-  log(`  ${C.bold}Generate API Key${C.reset}`);
-  log(`  ${C.gray}Your key will be generated locally and registered with Fluid.${C.reset}`);
-  log(`  ${C.gray}A wallet is derived server-side from your email (no seed phrase needed here).${C.reset}`);
-  log("");
-
-  // ── Ask for email ──────────────────────────────────────────────────────────
-  let email;
-  while (true) {
-    email = await prompt(`  ${C.cyan}?${C.reset} Your email address: `);
-    if (!email || !email.includes("@") || !email.includes(".")) {
-      err("Please enter a valid email address.");
-      continue;
-    }
-    break;
-  }
-
-  log("");
-  log(`  ${C.gray}Generating key...${C.reset}`);
-
-  // ── Generate fw_sor_ key locally ──────────────────────────────────────────
-  const rawRandom = crypto.randomBytes(24).toString("hex");
-  const fullKey   = `fw_sor_${rawRandom}`;
-  const keyHint   = fullKey.slice(0, 12);
-  const keyHash   = crypto.createHash("sha256").update(fullKey).digest("hex");
-
-  // ── Register with Fluid backend ───────────────────────────────────────────
-  try {
-    const res  = await fetch("https://fluidnative.com/api/developer/register-key", {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ email, keyHash, keyHint }),
-    });
-    const data = await res.json();
-
-    if (!data.success) {
-      err("Registration failed: " + (data.error || "Unknown error"));
-      err("Falling back — try option 2 to paste an existing key.");
-      process.exit(1);
-    }
-
-    // ── Show key ONCE ─────────────────────────────────────────────────────
-    log("");
-    log(`  ${C.green}${C.bold}✓  API key generated and registered!${C.reset}`);
-    log("");
-    log(`  ${C.bold}Your API key — shown once, save it now:${C.reset}`);
-    log(`  ${C.cyan}${C.bold}${fullKey}${C.reset}`);
-    log("");
-    log(`  ${C.yellow}⚠  This key will not be shown again.${C.reset}`);
-    log(`  ${C.gray}   It will be written to .env.local automatically.${C.reset}`);
-    log("");
-
-    if (data.wallets) {
-      log(`  ${C.bold}Registered wallets (derived from your email):${C.reset}`);
-      if (data.wallets.base)     ok(`Base:     ${C.gray}${data.wallets.base}${C.reset}`);
-      if (data.wallets.ethereum) ok(`Ethereum: ${C.gray}${data.wallets.ethereum}${C.reset}`);
-      if (data.wallets.solana)   ok(`Solana:   ${C.gray}${data.wallets.solana}${C.reset}`);
-      log("");
-    }
-
-    await prompt(`  ${C.dim}Press Enter to continue...${C.reset} `);
-    return fullKey;
-
-  } catch (e) {
-    err("Network error — could not reach fluidnative.com");
-    err("Check your internet connection, or use option 2 to paste an existing key.");
-    process.exit(1);
-  }
-}
-
-// ─── Option 2: Paste existing key from dashboard ──────────────────────────────
-
-async function pasteApiKeyFromDashboard() {
-  log("");
-  log(`  ${C.bold}Paste Existing Key${C.reset}`);
-  log(`  ${C.gray}Get yours at: ${C.cyan}fluidnative.com${C.gray} → Developer Console → API Keys${C.reset}`);
+  log(`  ${C.dim}Get your key at: ${C.reset}${C.cyan}fluidnative.com${C.reset}${C.dim} → Developer Console → API Keys${C.reset}`);
   log("");
 
   while (true) {
     const key = await prompt(`  ${C.cyan}?${C.reset} Paste API key ${C.dim}(fw_sor_...)${C.reset}: `);
-    if (!key.trim()) {
-      err("API key is required.");
-      continue;
-    }
+    if (!key.trim()) { err("API key is required."); continue; }
     if (!key.trim().startsWith("fw_sor_")) {
-      err(`Invalid format — keys must start with ${C.cyan}fw_sor_${C.reset}. Try again.`);
+      err(`Invalid format — must start with ${C.cyan}fw_sor_${C.reset}. Try again.`);
       continue;
     }
-    ok(`API key accepted  ${C.dim}${key.slice(0, 13)}${"•".repeat(10)}${C.reset}`);
     return key.trim();
   }
 }
@@ -383,32 +284,14 @@ async function main() {
   const gitignore = ["node_modules", ".env.local", "dist", ".DS_Store"].join("\n");
   fs.writeFileSync(path.join(projectPath, ".gitignore"), gitignore + "\n");
 
-  ok(`API key written  ${C.dim}${apiKey.slice(0, 13)}•••${C.reset}`);
-  ok(`Signing key derived  ${C.dim}${privateKey.slice(0, 8)}… (seed phrase not stored)${C.reset}`);
+  ok(`API key written   ${C.dim}${apiKey.slice(0, 13)}${"*".repeat(3)}${C.reset}`);
+  ok(`Signing key derived   ${C.dim}${privateKey.slice(0, 10)}.. (seed phrase not stored)${C.reset}`);
 
   // ── Done ───────────────────────────────────────────────────────────────────
   log("");
-  log(`  ${C.green}${C.bold}Your Fluid swap app is ready.${C.reset}`);
-  log("");
-  log(`  ${C.bold}Next steps:${C.reset}`);
-  info("1.", `cd ${C.cyan}${projectName}${C.reset}`);
-
-  info("2.", `${C.cyan}npm run dev${C.reset}  — opens at http://localhost:5173`);
-
-  log("");
-  log(`  ${C.bold}What's inside:${C.reset}`);
-  log(`  ${C.gray}·${C.reset} React 18 + Vite + TypeScript`);
-  log(`  ${C.gray}·${C.reset} FluidSOR swap interface — live DEX price indexing`);
-  log(`  ${C.gray}·${C.reset} Routes from Fluid AMM, Uniswap V3, Aerodrome — best price auto-selected`);
-  log(`  ${C.gray}·${C.reset} Server-side execution — no private key or MetaMask needed`);
-  log(`  ${C.gray}·${C.reset} One-click "Route via FluidSOR" button executes the best swap`);
-  log("");
-  log(`  ${C.bold}Resources:${C.reset}`);
-  info("Docs",   "https://fluidnative.com/sdk");
-  info("GitHub", "https://github.com/fluidbase9/fluid-sor");
-  info("npm",    "https://www.npmjs.com/package/@fluidwalletbase/sdk");
-  log("");
-  log(`  ${C.cyan}${C.bold}Powered by Fluid · https://fluidnative.com${C.reset}`);
+  log(`  ${C.cyan}${C.bold}${projectName}${C.reset}`);
+  log(`    ${C.cyan}npm run dev${C.reset}`);
+  log(`    ${C.dim}# → http://localhost:5173${C.reset}`);
   log("");
 }
 

@@ -28,28 +28,32 @@
 ## Quick start
 
 ```bash
-# 1. Clone the repo
-git clone https://github.com/fluidbase9/fluid-sor
-
-# 2. Enter the project folder
-cd fluid-sor
-
-# 3. Install dependencies
-npm install
-
-# 4. Run the setup CLI (clears cache to ensure latest version)
-#    → creates your Fluid Wallet account
-#    → generates FLUID_AGENT_KEY (fk_...) with read + swap scopes
-#    → auto-exports FLUID_AGENT_KEY to ~/.zshrc
-#    → scaffolds a sample SOR project with keys pre-filled
-#    → opens VS Code automatically
-rm -rf ~/.npm/_npx && npx @fluidwallet/fadp-cli@latest
-
-# 5. Run the SOR demo agent
-node agent.js
+npx @fluidwalletbase/sdk create my-swap-app
 ```
 
-> **Tip:** Open a new terminal after step 4 so `~/.zshrc` is sourced and `FLUID_AGENT_KEY` is active.
+The CLI will interactively ask for:
+
+1. **Fluid API key** (`fw_sor_...`) — get it at [fluidnative.com → Developer Console → API Keys](https://fluidnative.com)
+2. **Seed phrase** (hidden input — never echoed, never written to disk) — your signing key is derived in-process (BIP-44 `m/44'/60'/0'/0/0`) and only the private key is saved to `.env.local`
+
+```
+# [1/5] Fluid API key setup
+# ? Paste API key (fw_sor_...): fw_sor_
+
+# [2/5] Derive signing key from seed phrase
+# ? Seed phrase (hidden):  — input invisible
+# ✓ Seed phrase received (12 words — input hidden)
+
+# [3/5] Scaffolding my-swap-app…
+# [4/5] Installing dependencies…
+# [5/5] Deriving signing key and writing .env.local…
+# ✓ API key written   fw_sor_48d688***
+# ✓ Signing key derived   0x1ab42c... (seed phrase not stored)
+
+my-swap-app
+  npm run dev
+  # → http://localhost:5173
+```
 
 ---
 
