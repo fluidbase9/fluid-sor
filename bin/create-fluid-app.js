@@ -70,17 +70,66 @@ function banner() {
 
 // ─── Parse args ───────────────────────────────────────────────────────────────
 
-function getProjectName() {
+function getProjectNameFromArgs() {
   const args     = process.argv.slice(2);
   const filtered = args.filter(a => a !== "create" && !a.startsWith("--"));
-  const name     = filtered[0];
-  if (!name) {
-    fail("Please provide a project name:");
-    log(`    npx fluid-sor create ${C.cyan}my-swap-app${C.reset}`);
-    log("");
-    process.exit(1);
+  return filtered[0] || null;
+}
+
+async function askProjectName() {
+  let name = getProjectNameFromArgs();
+  if (name) return name;
+  while (true) {
+    name = (await prompt(`  ${C.cyan}?${C.reset} Project name: `)).trim();
+    if (name) return name;
+    warn("Please enter a project name");
   }
-  return name;
+}
+
+// ─── Mode selector ────────────────────────────────────────────────────────────
+
+async function selectMode() {
+  const modes = [
+    {
+      key:      "a",
+      title:    `${C.bold}${C.cyan}Scaffold project with SOR protocol  (developer)${C.reset}`,
+      desc:     `${C.gray}Full scaffold — React + SOR routing, all keys auto-generated.${C.reset}`,
+      disabled: false,
+    },
+    {
+      key:      "b",
+      title:    `${C.bold}${C.cyan}Install SOR in my existing project  (developer)${C.reset}`,
+      desc:     `${C.gray}Add SOR routing + price feeds to your project. Wallet optional.${C.reset}`,
+      disabled: false,
+    },
+    {
+      key:      "c",
+      title:    `${C.bold}${C.gray}Scaffold project with SOR protocol  (agents)${C.reset}  ${C.yellow}(coming soon)${C.reset}`,
+      desc:     `${C.gray}Full scaffold with agent wallet auto-setup + SOR skills.${C.reset}`,
+      disabled: true,
+    },
+    {
+      key:      "d",
+      title:    `${C.bold}${C.gray}Install SOR in existing project  (agents)${C.reset}  ${C.yellow}(coming soon)${C.reset}`,
+      desc:     `${C.gray}Add SOR agent skills + wallet to your existing agent project.${C.reset}`,
+      disabled: true,
+    },
+  ];
+
+  log(`  ${C.bold}What would you like to do?${C.reset}`);
+  log("");
+  for (const m of modes) {
+    log(`  ${C.cyan}[${m.key}]${C.reset}  ${m.title}`);
+    log(`       ${m.desc}`);
+    log("");
+  }
+
+  while (true) {
+    const ans = (await prompt(`Choose ${C.cyan}a${C.reset}, ${C.cyan}b${C.reset}, ${C.cyan}c${C.reset} or ${C.cyan}d${C.reset}: `)).toLowerCase().trim();
+    if (ans === "c" || ans === "d") { warn("Coming soon — choose a or b"); continue; }
+    if (ans === "a" || ans === "b") return ans;
+    warn("Enter a or b");
+  }
 }
 
 // ─── Copy template ────────────────────────────────────────────────────────────
@@ -357,12 +406,10 @@ async function stepSeedPhrase() {
   return mnemonic;
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// ─── Mode a: Scaffold project for developers ──────────────────────────────────
 
-async function main() {
-  banner();
-
-  const projectName = getProjectName();
+async function runModeScaffoldDev() {
+  const projectName = await askProjectName();
   const projectPath = path.resolve(process.cwd(), projectName);
   const templateDir = path.resolve(__dirname, "../templates/react-swap");
   const TOTAL_STEPS = 7;
@@ -376,69 +423,49 @@ async function main() {
     process.exit(1);
   }
 
-  // ── Step 1: Account ───────────────────────────────────────────────────────
   step(1, TOTAL_STEPS, "Developer account");
   const { email } = await stepAccount();
 
-  // ── Step 2: API key (auto-generated) ──────────────────────────────────────
   step(2, TOTAL_STEPS, "Fluid API key  (fw_sor_...)  · auto-generated");
   const apiKey = await stepApiKey(email);
 
-  // ── Step 3: EC key pair (FLDP) ────────────────────────────────────────────
   step(3, TOTAL_STEPS, "FLDP EC key pair  (P-256)  · auto-generated");
   const { keyName, privateKeyJson } = await stepECKeyPair(email);
 
-  // ── Step 4: Seed phrase (auto-generated, shown once) ──────────────────────
   step(4, TOTAL_STEPS, "Wallet seed phrase  (BIP-39, 12 words)  · auto-generated");
   const mnemonic = await stepSeedPhrase();
 
-  // ── Step 5: Scaffold project ───────────────────────────────────────────────
   step(5, TOTAL_STEPS, `Scaffolding ${C.cyan}${projectName}${C.reset}…`);
   copyDir(templateDir, projectPath);
   patchPackageJson(projectPath, projectName);
   ok(`Template copied → ${C.gray}./${projectName}${C.reset}`);
 
-  // ── Step 6: Install dependencies ──────────────────────────────────────────
   step(6, TOTAL_STEPS, "Installing dependencies…");
   const pm = detectPm();
   try {
     execSync(`${pm} install`, { cwd: projectPath, stdio: "pipe" });
     ok(`Dependencies installed  ${C.dim}(${pm})${C.reset}`);
-  } catch {
-    warn(`Auto-install failed — run:  cd ${projectName} && npm install`);
-  }
+  } catch { warn(`Auto-install failed — run:  cd ${projectName} && npm install`); }
 
-  // ── Step 7: Derive private key + write .env.local ─────────────────────────
   step(7, TOTAL_STEPS, "Deriving signing key and writing .env.local…");
-
   const privateKey = derivePrivateKey(mnemonic);
 
-  const envContent = [
+  fs.writeFileSync(path.join(projectPath, ".env.local"), [
     "# ─── Fluid SOR — generated by fluid-sor CLI ─────────────────────────────────",
     "# ⚠  Never commit this file — it is git-ignored",
     "",
-    "# Fluid API key (fw_sor_...)",
     `VITE_FLUID_API_KEY=${apiKey}`,
-    "",
-    "# Wallet signing key — derived from seed phrase (seed phrase never stored)",
     `VITE_FLUID_PRIVATE_KEY=${privateKey}`,
-    "",
-    "# FluidSOR contract — Base mainnet (pre-filled)",
     "VITE_FLUID_SOR_ADDRESS=0xF24daF8Fe15383fb438d48811E8c4b43749DafAE",
-    "",
-    "# FLDP developer key name",
     `VITE_FLDP_KEY_NAME=${keyName}`,
-  ].join("\n");
-
-  fs.writeFileSync(path.join(projectPath, ".env.local"), envContent);
+  ].join("\n"));
   fs.writeFileSync(path.join(projectPath, ".gitignore"),
     ["node_modules", ".env.local", "dist", ".DS_Store"].join("\n") + "\n");
 
-  ok(`API key written         ${C.dim}${apiKey.slice(0, 13)}${"*".repeat(3)}${C.reset}`);
+  ok(`API key written         ${C.dim}${apiKey.slice(0, 13)}***${C.reset}`);
   ok(`Signing key derived     ${C.dim}${privateKey.slice(0, 10)}…  (seed phrase discarded)${C.reset}`);
   ok(`.env.local written      ${C.dim}(git-ignored)${C.reset}`);
 
-  // ── Done ──────────────────────────────────────────────────────────────────
   log("");
   log(hr("═"));
   log(`${C.bold}${C.green}  ✓  ${projectName} is ready!${C.reset}`);
@@ -448,6 +475,97 @@ async function main() {
   log(`    ${C.cyan}npm run dev${C.reset}`);
   log(`    ${C.dim}# → http://localhost:5173${C.reset}`);
   log("");
+}
+
+// ─── Mode b: Install SOR in existing project for developers ───────────────────
+
+async function runModeInstallDev() {
+  log(`\n  ${C.dim}Adds SOR routing and price feeds to your current project.${C.reset}\n`);
+  const TOTAL_STEPS = 4;
+  const installed   = [];
+
+  step(1, TOTAL_STEPS, "Install fluid-fadp  (SOR routing middleware)");
+  log(`  ${C.dim}Smart order routing across DEX venues + price feeds.${C.reset}\n`);
+  const pm = detectPm();
+  try {
+    execSync("npm install fluid-fadp", { stdio: "pipe", cwd: process.cwd() });
+    ok(`${C.cyan}fluid-fadp${C.reset} installed`);
+    installed.push("fluid-fadp");
+  } catch { warn("npm install failed — run: npm install fluid-fadp"); }
+  log("");
+
+  step(2, TOTAL_STEPS, "Install fluid-ticker  (live crypto price feeds)");
+  log(`  ${C.dim}11-source price oracle — ETH, BTC, SOL and 1000+ tokens.${C.reset}\n`);
+  try {
+    execSync("npm install fluid-ticker", { stdio: "pipe", cwd: process.cwd() });
+    ok(`${C.cyan}fluid-ticker${C.reset} installed`);
+    installed.push("fluid-ticker");
+  } catch { warn("npm install failed — run: npm install fluid-ticker"); }
+  log("");
+
+  step(3, TOTAL_STEPS, "Developer account + API key  (required for execute swap)");
+  log(`  ${C.dim}SOR routing works without a wallet. Account needed to execute swaps on-chain.${C.reset}\n`);
+
+  let apiKey = null; let keyName = null; let mnemonic = null;
+  const doWallet = await (async () => {
+    const ans = (await prompt(`  ${C.cyan}?${C.reset} Set up account + wallet for execute swap? ${C.gray}[Y/n]${C.reset} `)).trim().toLowerCase();
+    return ans === "" || ans === "y" || ans === "yes";
+  })();
+
+  if (doWallet) {
+    const { email } = await stepAccount();
+    apiKey          = await stepApiKey(email);
+    ({ keyName }    = await stepECKeyPair(email));
+    mnemonic        = await stepSeedPhrase();
+    installed.push("wallet");
+  } else {
+    log(`  ${C.gray}Skipped — run \`npx fluid-sor\` again any time to add wallet.${C.reset}\n`);
+  }
+
+  step(4, TOTAL_STEPS, "Writing .env.local…");
+  if (doWallet && mnemonic) {
+    const privateKey = derivePrivateKey(mnemonic);
+    const envPath    = path.join(process.cwd(), ".env.local");
+    const existing   = fs.existsSync(envPath) ? fs.readFileSync(envPath, "utf8") : "";
+    const marker     = "# Fluid SOR — generated by fluid-sor CLI";
+    if (!existing.includes(marker)) {
+      fs.appendFileSync(envPath, [
+        "", marker,
+        `FLUID_API_KEY=${apiKey}`,
+        `FLUID_PRIVATE_KEY=${privateKey}`,
+        "FLUID_SOR_ADDRESS=0xF24daF8Fe15383fb438d48811E8c4b43749DafAE",
+        `FLDP_KEY_NAME=${keyName}`, "",
+      ].join("\n"));
+    }
+    const gi = path.join(process.cwd(), ".gitignore");
+    const gt = fs.existsSync(gi) ? fs.readFileSync(gi, "utf8") : "";
+    if (!gt.includes(".env.local")) fs.appendFileSync(gi, "\n.env.local\n");
+    ok(`Keys written to ${C.cyan}.env.local${C.reset}  ${C.dim}(git-ignored)${C.reset}`);
+  } else {
+    ok("Packages ready — no keys written");
+  }
+
+  log("");
+  log(hr("═"));
+  log(`${C.bold}${C.green}  ✓  SOR installed in your project!${C.reset}`);
+  log(hr("═"));
+  log("");
+  log(`  ${C.green}✓${C.reset}  SOR routing       ${C.dim}import { SOR } from 'fluid-fadp'${C.reset}`);
+  log(`  ${C.green}✓${C.reset}  Price feeds        ${C.dim}import { ticker } from 'fluid-ticker'${C.reset}`);
+  log(`  ${doWallet ? `${C.green}✓` : `${C.gray}○`}${C.reset}  Execute swap       ${doWallet ? C.dim + "keys in .env.local" + C.reset : C.gray + "(not set up)" + C.reset}`);
+  log("");
+  log(`  ${C.dim}Installed: ${installed.join(", ")}${C.reset}`);
+  log(`  ${C.dim}Docs: fluidnative.com/fadp${C.reset}`);
+  log("");
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
+
+async function main() {
+  banner();
+  const mode = await selectMode();
+  if (mode === "a") await runModeScaffoldDev();
+  else              await runModeInstallDev();
 }
 
 main().catch(e => {
