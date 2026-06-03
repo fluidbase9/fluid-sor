@@ -8,14 +8,21 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { privateKeyToAccount } from "viem/accounts";
 
-// ─── Standalone wallet derivation (reads VITE_FLUID_PRIVATE_KEY from .env.local)
-const _pk    = (import.meta.env.VITE_FLUID_PRIVATE_KEY as string | undefined)?.trim();
-const _acct  = (_pk?.startsWith("0x") && _pk.length === 66)
+// ─── Standalone wallet derivation ────────────────────────────────────────────
+// Option A: derive from private key (VITE_FLUID_PRIVATE_KEY)
+const _pk   = (import.meta.env.VITE_FLUID_PRIVATE_KEY as string | undefined)?.trim();
+const _acct = (_pk?.startsWith("0x") && _pk.length === 66)
   ? (() => { try { return privateKeyToAccount(_pk as `0x${string}`); } catch { return null; } })()
   : null;
-const _standaloneUser = _acct
-  ? { walletAddress: _acct.address, email: (import.meta.env.VITE_FLUID_API_KEY as string | undefined) ?? "" }
-  : null;
+// Option B: directly provide wallet address + email (no private key needed)
+const _directAddr  = (import.meta.env.VITE_FLUID_WALLET_ADDRESS as string | undefined)?.trim();
+const _directEmail = (import.meta.env.VITE_FLUID_EMAIL          as string | undefined)?.trim();
+const _standaloneUser =
+  _acct
+    ? { walletAddress: _acct.address,  email: (import.meta.env.VITE_FLUID_API_KEY as string | undefined) ?? "" }
+  : (_directAddr && _directEmail)
+    ? { walletAddress: _directAddr,    email: _directEmail }
+    : null;
 
 // ─── Injected CSS (same as SDK template index.css) ────────────────────────────
 
