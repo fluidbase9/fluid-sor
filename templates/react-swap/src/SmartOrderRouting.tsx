@@ -86,9 +86,25 @@ function shortenAddress(addr: string) {
 
 // ─── Inline Card / Badge components ──────────────────────────────────────────
 
+// ─── Theme tokens (matches fluidnative.com dashboard) ────────────────────────
+const T = {
+  pageBg:    "#050508",        // very dark blue-black page
+  cardBg:    "#0f0f14",        // dark navy-grey card (same as landing page cards)
+  cardBg2:   "#111117",        // slightly lighter card variant
+  border:    "#1a1a26",        // subtle dark border
+  border2:   "#22222e",        // slightly lighter border
+  textPrime: "#ffffff",
+  textSec:   "#8b92a5",
+  textDim:   "#4b5263",
+  accent:    "#22d3ee",        // teal
+  accentOr:  "#f59e0b",        // amber
+  green:     "#4ade80",
+  red:       "#f87171",
+};
+
 function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div style={{ background: "#030712", border: "1px solid #1f2937", borderRadius: 12, ...style }}>
+    <div style={{ background: T.cardBg, border: `1px solid ${T.border}`, borderRadius: 14, ...style }}>
       {children}
     </div>
   );
@@ -100,11 +116,11 @@ function CardHeader({ children }: { children: React.ReactNode }) {
   return <div style={{ padding: "1rem 1.25rem 0" }}>{children}</div>;
 }
 function CardTitle({ children }: { children: React.ReactNode }) {
-  return <div style={{ color: "#fff", fontWeight: 600, fontSize: "0.9rem", marginBottom: "0.75rem" }}>{children}</div>;
+  return <div style={{ color: T.textPrime, fontWeight: 600, fontSize: "0.875rem", letterSpacing: "0.01em", marginBottom: "0.75rem" }}>{children}</div>;
 }
 function Badge({ children, color = "#22d3ee" }: { children: React.ReactNode; color?: string }) {
   return (
-    <span style={{ background: color + "1a", border: `1px solid ${color}33`, color, borderRadius: 6, padding: "0.2rem 0.6rem", fontSize: "0.7rem", fontWeight: 600 }}>
+    <span style={{ background: color + "18", border: `1px solid ${color}30`, color, borderRadius: 6, padding: "0.18rem 0.55rem", fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.04em" }}>
       {children}
     </span>
   );
@@ -141,17 +157,17 @@ function TickerBar() {
     const p = prices[t.sym];
     const up = (p?.change ?? 0) >= 0;
     return (
-      <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 24px", fontSize: 11, fontFamily: "monospace", color: "#9ca3af", flexShrink: 0 }}>
-        <span style={{ color: "#fff", fontWeight: 700 }}>{t.sym}</span>
+      <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 24px", fontSize: 11, fontFamily: "monospace", color: T.textSec, flexShrink: 0 }}>
+        <span style={{ color: T.textPrime, fontWeight: 700 }}>{t.sym}</span>
         <span>{p ? `$${p.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}</span>
-        {p && <span style={{ color: up ? "#4ade80" : "#f87171" }}>{up ? "+" : ""}{p.change.toFixed(2)}%</span>}
-        <span style={{ color: "#222", marginLeft: 4 }}>·</span>
+        {p && <span style={{ color: up ? T.green : T.red }}>{up ? "+" : ""}{p.change.toFixed(2)}%</span>}
+        <span style={{ color: T.border2, marginLeft: 4 }}>·</span>
       </span>
     );
   };
 
   return (
-    <div style={{ background: "#000", borderBottom: "1px solid #111", overflow: "hidden", whiteSpace: "nowrap" }}>
+    <div style={{ background: T.cardBg, borderBottom: `1px solid ${T.border}`, overflow: "hidden", whiteSpace: "nowrap" }}>
       <style>{`
         @keyframes ticker {
           0%   { transform: translateX(0); }
@@ -185,30 +201,30 @@ export default function SmartOrderRouting() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#000", color: "#fff", fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: T.pageBg, color: T.textPrime, fontFamily: "'Inter', sans-serif" }}>
 
       {/* Ticker bar */}
       <TickerBar />
 
       {/* Page label */}
-      <div style={{ textAlign: "center", padding: "12px 0 0", fontSize: 10, fontWeight: 700, letterSpacing: "0.25em", textTransform: "uppercase", color: "#6366f1" }}>
+      <div style={{ textAlign: "center", padding: "14px 0 0", fontSize: 10, fontWeight: 700, letterSpacing: "0.28em", textTransform: "uppercase", color: "#6366f1" }}>
         Smart Order Routing
       </div>
 
-      <div style={{ maxWidth: 896, margin: "0 auto", padding: "0 24px 48px", display: "flex", flexDirection: "column", gap: 24 }}>
+      <div style={{ maxWidth: 896, margin: "0 auto", padding: "0 24px 64px", display: "flex", flexDirection: "column", gap: 28 }}>
 
         {/* Header */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 12, paddingTop: 24 }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 10, paddingTop: 28 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
             <img src="https://fluidspot.s3.us-east-2.amazonaws.com/web/Base/media_files/fluid23.png" alt="Fluid SOR" style={{ width: 64, height: 64, objectFit: "contain", borderRadius: 12 }} />
-            <h1 style={{ fontWeight: 800, fontSize: "3.5rem", lineHeight: 1.1, margin: 0 }}>Smart Order Routing</h1>
+            <h1 style={{ fontWeight: 800, fontSize: "3.5rem", lineHeight: 1.1, margin: 0, color: T.textPrime, letterSpacing: "-0.02em" }}>Smart Order Routing</h1>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 600, fontStyle: "italic", fontSize: "1.1rem", color: "#cbd5e1" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 600, fontStyle: "italic", fontSize: "1.05rem", color: T.textSec }}>
             <span>[ Integrated in Fluid Wallet ] -</span>
-            <img src="https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/fluid_intelliegence.png" alt="Fluid Intelligence" style={{ height: 20, objectFit: "contain" }} />
-            <span>Fluid Intelligence</span>
+            <img src="https://fluidspot.s3.us-east-2.amazonaws.com/12th_march-2026/fluid_intelliegence.png" alt="Fluid Intelligence" style={{ height: 18, objectFit: "contain" }} />
+            <span style={{ color: T.accent }}>Fluid Intelligence</span>
           </div>
-          <p style={{ fontStyle: "italic", fontSize: "1.05rem", color: "#94a3b8", margin: 0 }}>
+          <p style={{ fontStyle: "italic", fontSize: "0.95rem", color: T.textDim, margin: 0 }}>
             ( Fluid SOR - DeFi Protocol delivering Best Prices and Minimal Slippage in Swaps and Perpetual Trading )
           </p>
         </div>
@@ -219,29 +235,29 @@ export default function SmartOrderRouting() {
         </div>
 
         {/* FluidSOR contract badge */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#6b7280", background: "#0a0a0a", borderRadius: 12, padding: "10px 16px", border: "1px solid #1f2937", flexWrap: "wrap" }}>
-          <span style={{ color: "#4b5563" }}>FluidSOR:</span>
-          <a href={`https://basescan.org/address/${FLUID_SOR_ADDRESS}`} target="_blank" rel="noopener noreferrer" style={{ color: "#22d3ee", fontFamily: "monospace", textDecoration: "none" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: T.textDim, background: T.cardBg, borderRadius: 12, padding: "10px 16px", border: `1px solid ${T.border}`, flexWrap: "wrap" }}>
+          <span style={{ color: T.textDim }}>FluidSOR:</span>
+          <a href={`https://basescan.org/address/${FLUID_SOR_ADDRESS}`} target="_blank" rel="noopener noreferrer" style={{ color: T.accent, fontFamily: "monospace", textDecoration: "none" }}>
             {shortenAddress(FLUID_SOR_ADDRESS)}
           </a>
-          <button onClick={copyAddress} style={{ background: "none", border: "none", cursor: "pointer", color: copied ? "#4ade80" : "#6b7280", display: "flex" }}>
+          <button onClick={copyAddress} style={{ background: "none", border: "none", cursor: "pointer", color: copied ? T.green : T.textDim, display: "flex" }}>
             {copied ? <IconCheck /> : <IconCopy />}
           </button>
-          <span style={{ marginLeft: "auto" }}><Badge color="#22d3ee">Base Mainnet</Badge></span>
+          <span style={{ marginLeft: "auto" }}><Badge color={T.accent}>Base Mainnet</Badge></span>
         </div>
 
         {/* Feature cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
           {FEATURES.map((f, i) => (
             <Card key={i}>
               <CardContent>
-                <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-                  <div style={{ padding: 8, borderRadius: 8, background: "#0f172a", border: "1px solid #1f2937", flexShrink: 0 }}>
+                <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+                  <div style={{ padding: 8, borderRadius: 10, background: T.pageBg, border: `1px solid ${T.border}`, flexShrink: 0 }}>
                     {f.icon}
                   </div>
                   <div>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: "#fff", margin: "0 0 4px" }}>{f.title}</p>
-                    <p style={{ fontSize: 12, color: "#9ca3af", margin: 0, lineHeight: 1.6 }}>{f.description}</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: T.textPrime, margin: "0 0 4px" }}>{f.title}</p>
+                    <p style={{ fontSize: 12, color: T.textSec, margin: 0, lineHeight: 1.65 }}>{f.description}</p>
                   </div>
                 </div>
               </CardContent>
@@ -254,18 +270,18 @@ export default function SmartOrderRouting() {
           <CardContent>
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
               <div>
-                <p style={{ fontSize: 14, fontWeight: 600, color: "#fff", display: "flex", alignItems: "center", gap: 8, margin: "0 0 4px" }}>
+                <p style={{ fontSize: 13, fontWeight: 600, color: T.textPrime, display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px" }}>
                   <IconZap /> Build with Fluid SOR
                 </p>
-                <p style={{ fontSize: 12, color: "#9ca3af", maxWidth: 400, lineHeight: 1.6, margin: "0 0 12px" }}>
-                  Embed FluidSOR in your own dApp using <code style={{ color: "#22d3ee", fontFamily: "monospace" }}>fluid-sor</code>. One command scaffolds a swap interface with wallet connection.
+                <p style={{ fontSize: 12, color: T.textSec, maxWidth: 400, lineHeight: 1.65, margin: "0 0 14px" }}>
+                  Embed FluidSOR in your own dApp using <code style={{ color: T.accent, fontFamily: "monospace" }}>fluid-sor</code>. One command scaffolds a swap interface with wallet connection.
                 </p>
-                <div style={{ background: "#000", border: "1px solid #1f2937", borderRadius: 8, padding: "10px 16px", fontFamily: "monospace", fontSize: 14, color: "#4ade80", display: "inline-block" }}>
+                <div style={{ background: T.pageBg, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 16px", fontFamily: "monospace", fontSize: 13, color: T.green, display: "inline-block" }}>
                   npx fluid-sor create my-swap-app
                 </div>
               </div>
               <a href="https://fluidnative.com" target="_blank" rel="noopener noreferrer"
-                style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 12, background: "#4c1d9520", border: "1px solid #7c3aed30", color: "#a78bfa", fontSize: 14, fontWeight: 500, textDecoration: "none", alignSelf: "flex-start" }}>
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, background: "#4c1d9518", border: "1px solid #7c3aed28", color: "#a78bfa", fontSize: 13, fontWeight: 500, textDecoration: "none", alignSelf: "flex-start" }}>
                 fluidnative.com <IconExternalLink />
               </a>
             </div>
@@ -276,24 +292,25 @@ export default function SmartOrderRouting() {
         <Card>
           <CardHeader><CardTitle>Supported Stablecoins by Network</CardTitle></CardHeader>
           <CardContent>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {NETWORKS.map(net => (
                 <div key={net.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <img src={net.icon} alt={net.displayName} style={{ width: 16, height: 16, borderRadius: 4, objectFit: "contain", flexShrink: 0 }} />
-                  <span style={{ fontSize: 12, color: "#d1d5db", width: 112, flexShrink: 0 }}>{net.displayName}</span>
+                  <span style={{ fontSize: 12, color: T.textSec, width: 112, flexShrink: 0 }}>{net.displayName}</span>
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                     {net.stablecoins.map(c => (
                       <span key={c.symbol} style={{
                         padding: "2px 8px", borderRadius: 999, fontSize: 11,
-                        background: net.id === "base" ? "#22d3ee1a" : "#1f2937",
-                        border: `1px solid ${net.id === "base" ? "#22d3ee33" : "#374151"}`,
-                        color: net.id === "base" ? "#22d3ee" : "#d1d5db",
+                        background: net.id === "base" ? T.accent + "18" : T.pageBg,
+                        border: `1px solid ${net.id === "base" ? T.accent + "30" : T.border}`,
+                        color: net.id === "base" ? T.accent : T.textSec,
+                        fontWeight: net.id === "base" ? 600 : 400,
                       }}>
                         {c.symbol}
                       </span>
                     ))}
                   </div>
-                  <span style={{ fontSize: 12, marginLeft: "auto", color: net.id === "base" ? "#06b6d4" : "#4b5563", fontWeight: net.id === "base" ? 600 : 400 }}>
+                  <span style={{ fontSize: 12, marginLeft: "auto", color: net.id === "base" ? T.accent : T.textDim, fontWeight: net.id === "base" ? 600 : 400 }}>
                     {net.id === "base" ? "SOR live" : "coming soon"}
                   </span>
                 </div>
