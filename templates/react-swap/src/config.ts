@@ -97,4 +97,4 @@ export const BASE_CHAIN_ID = base.id;
 export const BASESCAN      = "https://basescan.org";
 export const FLUID_SITE    = "https://fluidnative.com";
 export const FLUID_GITHUB  = "https://github.com/fluidbase9/fluid-sor";
-export const FLUID_NPM     = "https://www.npmjs.com/package/@fluidwallet/sdk";
+export const FLUID_NPM     = "https://www.npmjs.com/package/@fluidsor/sdk";
