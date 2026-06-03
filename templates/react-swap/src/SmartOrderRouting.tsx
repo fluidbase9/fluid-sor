@@ -86,20 +86,20 @@ function shortenAddress(addr: string) {
 
 // ─── Inline Card / Badge components ──────────────────────────────────────────
 
-// ─── Theme tokens (matches fluidnative.com dashboard) ────────────────────────
+// ─── Theme tokens — light grey page, white cards ──────────────────────────────
 const T = {
-  pageBg:    "#050508",        // very dark blue-black page
-  cardBg:    "#0f0f14",        // dark navy-grey card (same as landing page cards)
-  cardBg2:   "#111117",        // slightly lighter card variant
-  border:    "#1a1a26",        // subtle dark border
-  border2:   "#22222e",        // slightly lighter border
-  textPrime: "#ffffff",
-  textSec:   "#8b92a5",
-  textDim:   "#4b5263",
-  accent:    "#22d3ee",        // teal
+  pageBg:    "#e8e8ef",        // light grey page background
+  cardBg:    "#ffffff",        // white cards
+  cardBg2:   "#f8f8fc",        // off-white secondary card
+  border:    "#d8d8e4",        // soft grey border
+  border2:   "#e0e0ea",        // lighter border
+  textPrime: "#0f0f14",        // near-black text
+  textSec:   "#5a6072",        // medium grey secondary
+  textDim:   "#9ba3b8",        // dim grey
+  accent:    "#0ea5e9",        // sky blue accent
   accentOr:  "#f59e0b",        // amber
-  green:     "#4ade80",
-  red:       "#f87171",
+  green:     "#16a34a",
+  red:       "#dc2626",
 };
 
 function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
@@ -167,7 +167,7 @@ function TickerBar() {
   };
 
   return (
-    <div style={{ background: T.cardBg, borderBottom: `1px solid ${T.border}`, overflow: "hidden", whiteSpace: "nowrap" }}>
+    <div style={{ background: T.cardBg2, borderBottom: `1px solid ${T.border}`, overflow: "hidden", whiteSpace: "nowrap" }}>
       <style>{`
         @keyframes ticker {
           0%   { transform: translateX(0); }
@@ -229,8 +229,8 @@ export default function SmartOrderRouting() {
           </p>
         </div>
 
-        {/* Swap widget */}
-        <div style={{ maxWidth: 512, margin: "0 auto", width: "100%" }}>
+        {/* Swap widget — white card */}
+        <div style={{ maxWidth: 512, margin: "0 auto", width: "100%", background: T.cardBg, borderRadius: 20, border: `1px solid ${T.border}`, boxShadow: "0 4px 24px rgba(0,0,0,0.08)", overflow: "hidden" }}>
           <FluidSwapWidget />
         </div>
 
