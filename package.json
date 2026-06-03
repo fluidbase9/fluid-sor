@@ -1,5 +1,5 @@
 {
-  "name": "@fluidsor/sdk",
+  "name": "@fluidwalletbase/sor",
   "version": "1.0.0",
   "description": "Fluid Smart Order Router SDK — scaffold a swap interface for the agent economy powered by FluidSOR on Base. MCP compatible. The next trillion agents need DeFi infrastructure.",
   "keywords": [
