@@ -49,7 +49,7 @@ const WIDGET_CSS = `
 .fsw-flow-line.pink::after {background:linear-gradient(90deg,transparent,#ff007a,transparent)}
 .fsw-flow-line.blue::after {background:linear-gradient(90deg,transparent,#3b82f6,transparent)}
 .fsw-flow-line.purple::after{background:linear-gradient(90deg,transparent,#a78bfa,transparent)}
-.fsw-shimmer{background:linear-gradient(90deg,#4b5563 0%,#9ca3af 40%,#22d3ee 50%,#9ca3af 60%,#4b5563 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:fsw-shimmer 2s linear infinite}
+.fsw-shimmer{background:linear-gradient(90deg,#94a3b8 0%,#cbd5e1 40%,#0ea5e9 50%,#cbd5e1 60%,#94a3b8 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:fsw-shimmer 2s linear infinite}
 .fsw-route-bar-enter{animation:fsw-route-lock .35s cubic-bezier(.34,1.56,.64,1) forwards;transform-origin:left}
 .fsw-venue-scroll::-webkit-scrollbar,.fsw-route-scroll::-webkit-scrollbar{display:none}
 `;
@@ -235,7 +235,7 @@ function RouteCard({ route, toSym, selected, onClick, rank }: {
   const isBest = rank === 0;
   const rankLabels = ["BEST","2nd","3rd","4th","5th","6th","7th","8th","9th","10th","11th","12th"];
   const rankLabel  = rankLabels[rank] ?? `${rank + 1}th`;
-  const rankColor  = rank === 0 ? "#4ade80" : rank === 1 ? "#facc15" : rank === 2 ? "#fb923c" : "#6b7280";
+  const rankColor  = rank === 0 ? "#16a34a" : rank === 1 ? "#d97706" : rank === 2 ? "#ea580c" : "#9ca3af";
 
   const shortName = route.venue
     .replace(" Aggregator","").replace(" Stable AMM"," AMM")
@@ -254,10 +254,10 @@ function RouteCard({ route, toSym, selected, onClick, rank }: {
         )}
         <span style={{ fontSize: "0.62rem", fontWeight: 700, color, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "calc(100% - 20px)" }}>{shortName}</span>
       </div>
-      <div style={{ fontWeight: 800, fontSize: "0.75rem", color: rank < 3 ? rankColor : "#e5e7eb", letterSpacing: "-0.01em", wordBreak: "break-all", lineHeight: 1.2 }}>
-        {route.amountOut}<span style={{ fontSize: "0.58rem", color: "#6b7280", marginLeft: "0.2rem" }}>{toSym}</span>
+      <div style={{ fontWeight: 800, fontSize: "0.75rem", color: rank < 3 ? rankColor : "#374151", letterSpacing: "-0.01em", wordBreak: "break-all", lineHeight: 1.2 }}>
+        {route.amountOut}<span style={{ fontSize: "0.58rem", color: "#94a3b8", marginLeft: "0.2rem" }}>{toSym}</span>
       </div>
-      <div style={{ fontSize: "0.55rem", color: "#374151", display: "flex", justifyContent: "space-between" }}>
+      <div style={{ fontSize: "0.55rem", color: "#94a3b8", display: "flex", justifyContent: "space-between" }}>
         <span>{parseFloat(route.priceImpact).toFixed(2)}% fee</span>
         <span>{route.gasEstimate}</span>
       </div>
@@ -351,10 +351,10 @@ function RoutingAnimation({ fromSym, toSym, scanning, routes }: {
                   </>
                 ) : (
                   <>
-                    <div style={{ fontSize: "0.68rem", fontWeight: isBest ? 800 : 600, color: isBest ? "#4ade80" : matchedRoute ? "#e5e7eb" : "#374151", letterSpacing: "-0.01em", lineHeight: 1.3, wordBreak: "break-all" }}>
+                    <div style={{ fontSize: "0.68rem", fontWeight: isBest ? 800 : 600, color: isBest ? "#16a34a" : matchedRoute ? "#1f2937" : "#94a3b8", letterSpacing: "-0.01em", lineHeight: 1.3, wordBreak: "break-all" }}>
                       {matchedRoute ? matchedRoute.amountOut : "—"}
                     </div>
-                    {isBest && <span style={{ display: "inline-block", marginTop: "0.2rem", fontSize: "0.46rem", fontWeight: 800, color: "#4ade80", background: "#4ade8015", border: "1px solid #4ade8033", borderRadius: 3, padding: "0.06rem 0.28rem", letterSpacing: "0.06em", textTransform: "uppercase" }}>BEST</span>}
+                    {isBest && <span style={{ display: "inline-block", marginTop: "0.2rem", fontSize: "0.46rem", fontWeight: 800, color: "#16a34a", background: "#dcfce7", border: "1px solid #bbf7d0", borderRadius: 3, padding: "0.06rem 0.28rem", letterSpacing: "0.06em", textTransform: "uppercase" }}>BEST</span>}
                   </>
                 )}
               </div>
@@ -376,7 +376,7 @@ function RoutingAnimation({ fromSym, toSym, scanning, routes }: {
               )}
               Best: {routes[0].venue}
             </span>
-            <span style={{ color: "#4ade80", fontWeight: 700 }}>{routes[0].amountOut} {toSym}</span>
+            <span style={{ color: "#16a34a", fontWeight: 700 }}>{routes[0].amountOut} {toSym}</span>
           </div>
         );
       })()}
@@ -940,7 +940,7 @@ export default function FluidSwapWidget({ onRouteFound, previewMode = false, ini
           <div>
             <div style={{ fontSize: "0.68rem", color: "#4b5563", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>You receive</div>
             <div style={S.inputBox}>
-              <div style={{ ...S.inputNum, color: bestRoute ? "#4ade80" : "#374151", fontSize: "1.2rem" }}>
+              <div style={{ ...S.inputNum, color: bestRoute ? "#16a34a" : "#9ca3af", fontSize: "1.2rem", fontWeight: bestRoute ? 800 : 400 }}>
                 {quoting ? <span className="fsw-shimmer" style={{ fontSize: "0.85rem" }}>Routing…</span> : bestRoute ? bestRoute.amountOut : <span style={{ color: "#1f2937" }}>—</span>}
               </div>
               <button style={S.tokenBtn(tokenOut.color)} onClick={() => setShowTo(true)}>
@@ -1033,7 +1033,7 @@ export default function FluidSwapWidget({ onRouteFound, previewMode = false, ini
               {chainAddrLoading
                 ? <span style={{ fontSize: "0.72rem", color: "#374151" }}>…</span>
                 : chainAddress
-                  ? <span style={{ fontSize: "0.68rem", fontFamily: "monospace", color: "#9ca3af", wordBreak: "break-all" as const, flex: 1 }}>{chainAddress}</span>
+                  ? <span style={{ fontSize: "0.68rem", fontFamily: "monospace", color: "#374151", wordBreak: "break-all" as const, flex: 1 }}>{chainAddress}</span>
                   : <span style={{ fontSize: "0.72rem", color: "#374151" }}>—</span>
               }
               <div style={{ display: "flex", gap: "0.15rem", flexShrink: 0 }}>
@@ -1182,11 +1182,11 @@ export default function FluidSwapWidget({ onRouteFound, previewMode = false, ini
                     <div style={{ width: 22, height: 22, borderRadius: "50%", background: tokenColor + "22", border: `1px solid ${tokenColor}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <span style={{ fontSize: "0.55rem", fontWeight: 800, color: tokenColor }}>{tb.token.slice(0, 2)}</span>
                     </div>
-                    <span style={{ fontSize: "0.72rem", fontWeight: 700, color: hasValue ? "#e5e7eb" : "#4b5563" }}>{tb.token}</span>
+                    <span style={{ fontSize: "0.72rem", fontWeight: 700, color: hasValue ? "#1f2937" : "#94a3b8" }}>{tb.token}</span>
                   </div>
                   {/* Amount + USD */}
                   <div style={{ textAlign: "right" }}>
-                    <span style={{ fontSize: "0.75rem", fontWeight: 600, color: hasValue ? "#e5e7eb" : "#4b5563", fontFamily: "monospace" }}>{tb.amount}</span>
+                    <span style={{ fontSize: "0.75rem", fontWeight: 600, color: hasValue ? "#1f2937" : "#94a3b8", fontFamily: "monospace" }}>{tb.amount}</span>
                     {tb.usdValue > 0 && (
                       <span style={{ fontSize: "0.62rem", color: "#6b7280", marginLeft: "0.35rem" }}>
                         ${tb.usdValue < 0.01 ? tb.usdValue.toFixed(4) : tb.usdValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -1288,7 +1288,7 @@ export default function FluidSwapWidget({ onRouteFound, previewMode = false, ini
         <div>
           <div style={{ fontSize: "0.68rem", color: "#4b5563", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>You receive</div>
           <div style={S.inputBox}>
-            <div style={{ ...S.inputNum, color: bestRoute ? "#4ade80" : "#374151", fontSize: "1.2rem" }}>
+            <div style={{ ...S.inputNum, color: bestRoute ? "#16a34a" : "#9ca3af", fontSize: "1.2rem", fontWeight: bestRoute ? 800 : 400 }}>
               {quoting
                 ? <span className="fsw-shimmer" style={{ fontSize: "0.85rem" }}>Routing…</span>
                 : bestRoute ? bestRoute.amountOut : <span style={{ color: "#1f2937" }}>—</span>
@@ -1416,7 +1416,7 @@ export default function FluidSwapWidget({ onRouteFound, previewMode = false, ini
         {bestRoute && routes.length > 0 && (
           <div style={{ background: "#22d3ee08", border: "1px solid #22d3ee22", borderRadius: 10, padding: "0.6rem 0.85rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem" }}>
             <div><span style={{ color: "#22d3ee", fontWeight: 600 }}>{bestRoute.venue}</span><span style={{ color: "#4b5563" }}> · best price</span></div>
-            <span style={{ color: "#4ade80", fontWeight: 700 }}>{bestRoute.amountOut} {toSym}</span>
+            <span style={{ color: "#16a34a", fontWeight: 700 }}>{bestRoute.amountOut} {toSym}</span>
           </div>
         )}
         {bridgeQuote && isCrossChain && (
