@@ -28,7 +28,7 @@
 ## Quick start
 
 ```bash
-npx @fluidsor/sdk create my-swap-app
+npx @fluidwallet/sdk create my-swap-app
 ```
 
 The CLI will interactively ask for:
